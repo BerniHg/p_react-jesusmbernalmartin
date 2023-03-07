@@ -3,6 +3,7 @@ import Mensajes from "./Mensajes"
 import Camara from "../img/camara.png"
 import Annadir from "../img/annadir.png"
 import Mas from "../img/mas.png"
+import Input from "./Input"
 
 const Chat = () => {
   return (
@@ -14,8 +15,9 @@ const Chat = () => {
           <img src={Annadir} alt="añadir" />
           <img src={Mas} alt="más" />
         </div>
-        <Mensajes />
       </div>
+      <Mensajes />
+      <Input />
     </div>
   )
 }

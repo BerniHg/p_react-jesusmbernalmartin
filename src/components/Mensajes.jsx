@@ -1,5 +1,6 @@
 import React from 'react'
 import Mensaje from "./Mensaje"
+
 const Mensajes = () => {
   return (
     <div className='mensajes'>

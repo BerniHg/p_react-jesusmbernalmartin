@@ -1,4 +1,4 @@
-/* Inicio sesión y registro */
+
 
 body {
   font-family: Arial, Helvetica, sans-serif;
@@ -206,3 +206,101 @@ body {
   height: 24px;
   cursor: pointer;
 }
+
+.chat .mensajes {
+  background-color: lightgray;
+  padding: 10px;
+  height: calc(100% - 160px);
+  overflow: scroll;
+}
+
+.chat .mensajes .mensaje {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.mensaje .infomensaje {
+  display: flex;
+  flex-direction: column;
+  color: gray;
+  font-weight: 300;
+}
+
+.mensaje .infomensaje img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mensaje .contenidomensaje {
+  max-width: 80%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mensaje .contenidomensaje p {
+  background-color: white;
+  padding: 10px 20px;
+  border-radius: 0px 10px 10px 10px;
+  max-width: max-content;
+}
+
+.mensaje .contenidomensaje img {
+  width: 50%;
+}
+
+.mensaje.duenno {
+  flex-direction: row-reverse;
+}
+
+.mensaje.duenno .contenidomensaje {
+  align-items: flex-end;
+}
+
+.mensaje.duenno .contenidomensaje p {
+  background-color: #b0652d;
+  color: white;
+  border-radius: 10px 0px 10px 10px;
+}
+
+.chat .input {
+  height: 50px;
+  background-color: white;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input img {
+  height: 24px;
+  cursor: pointer;
+}
+
+.input input {
+  width: 100%;
+  border: none;
+  outline: none;
+}
+
+.input input::placeholder {
+  color: lightgray;
+}
+
+.input .enviar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+}
+
+.input button {
+  border: none;
+  padding: 10px 15px;
+  color: white;
+  background-color: #ed995d;
+}
+
