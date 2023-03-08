@@ -1,18 +1,52 @@
-import React from 'react'
-import Foto1 from "../img/usuario2.jpg"
+import React, { useContext, useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { baseDatos } from "../firebase";
+import { AuthContext } from "../context/AuthContext";
+import { ChatContext } from "../context/ChatContext";
 
 const Chats = () => {
-  return (
-    <div className='chats'>
-      <div className="chatusuario">
-        <img src={Foto1} />
-        <div className="chatinfo">
-          <span>Juan</span>
-          <p>Hola</p>
-        </div>
-      </div>
-    </div>
-  )
-}
+  const [chats, setChats] = useState([]);
 
-export default Chats
+  const { currentUser } = useContext(AuthContext);
+  const { dispatch } = useContext(ChatContext);
+
+  useEffect(() => {
+    const getChats = () => {
+      const unsub = onSnapshot(
+        doc(baseDatos, "chatsUsuarios", currentUser.uid),
+        (doc) => {
+          setChats(doc.data());
+        }
+      );
+
+      return () => {
+        unsub();
+      };
+    };
+
+    currentUser.uid && getChats();
+  }, [currentUser.uid]);
+
+  const handleSelect = (u) =>{
+    dispatch({type: "CHANGE_USER", payload: u})
+  }
+
+  return (
+    <div className="chats">
+      {Object.entries(chats)?.map((chat) => (
+        <div className="chatusuario" key={chat[0]} onClick={()=>handleSelect(chat[1].infoUsuario)}>
+          <img src={chat[1].infoUsuario.photoURL} alt="" />
+          <div className="chatinfo">
+            <span>{chat[1].infoUsuario.displayName}</span>
+            <p>{chat[1].infoUsuario.ultimoMens?.text}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Chats;
+
+// eslint-disable-next-line no-lone-blocks
+{/* oncClick={()=>handleSelect(chat[1].infoUsuario)} */}

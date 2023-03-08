@@ -19,7 +19,6 @@ const Registro = () => {
     console.log(nombre, correo, contrasenna);
 
     try {
-      const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
 
       const storageRef = ref(storage, nombre);
 
@@ -30,6 +29,8 @@ const Registro = () => {
           errorProducido(true);
         },
         async () => {
+          const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
+          
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
 
           console.log('url', downloadURL)
