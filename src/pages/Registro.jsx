@@ -16,6 +16,7 @@ const Registro = () => {
     const correo = valores.target[1].value;
     const contrasenna = valores.target[2].value;
     const foto = valores.target[3].files[0];
+    console.log(nombre, correo, contrasenna);
 
     try {
       const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
@@ -28,20 +29,29 @@ const Registro = () => {
         (error) => {
           errorProducido(true);
         },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-            await updateProfile(datos.user, {
-                displayName: nombre, photoURL: downloadURL 
-            });
-            await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
-                uid: datos.user.uid, displayName: nombre, email: correo, photoURL: downloadURL
-            });
-            await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {})
-            navigate("/login");
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+
+          console.log('url', downloadURL)
+
+          await updateProfile(datos.user, {
+              displayName: nombre, photoURL: downloadURL 
           });
+
+          console.log('aquí');
+          
+          await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
+            uid: datos.user.uid, displayName: nombre, email: correo, photoURL: downloadURL
+          });
+
+          await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
+          console.log('aquí 2');
+
+          navigate("/login");
         }
       );
     } catch (error) {
+      console.log(error)
       errorProducido(true);
     }
   };
@@ -71,4 +81,5 @@ const Registro = () => {
 
 export default Registro;
 
+// eslint-disable-next-line
 {/* https://youtu.be/k4mjF4sPITE?t=4716 */}

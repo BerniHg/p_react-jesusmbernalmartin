@@ -26,7 +26,7 @@ const Login = () => {
             <span className="logo">Orange Chat</span>
             <span className="title">Inicio de sesión</span>
             <form onSubmit={handleSubmit}>
-                <input type="text" placeholder="Nombre de usuario" />
+                <input type="email" placeholder="Correo" />
                 <input type="password" placeholder="Contraseña" /> 
                 <button>Iniciar sesión</button>
                 {error && <span>Something went wrong</span>}

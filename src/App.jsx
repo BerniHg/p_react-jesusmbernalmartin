@@ -21,8 +21,12 @@ function App() {
   return (
     <BrowserRouter>
     <Routes>
-      <Route path="">
-        <Route index element={<Menu />} />
+      <Route path="/">
+        <Route index element={
+          <ProtectedRoute>
+            <Menu />
+          </ProtectedRoute>
+        } />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Registro />} />
       </Route>
