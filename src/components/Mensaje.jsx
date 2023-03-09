@@ -1,20 +1,26 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useRef } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import { ChatContext } from '../context/ChatContext'
 
 const Mensaje = ({mensaje}) => {
   const {currentUser} = useContext(AuthContext)
   const {data} = useContext(ChatContext)
+
+  const ref = useRef()
+
+  useEffect(() => {
+    ref.current?.scrollIntoView({behavior:"smooth"})
+  }, [mensaje])
+
   console.log(mensaje)
   return (
-    <div className='duenno mensaje'>
+    <div ref={ref} className={`mensaje ${mensaje.senderId === currentUser.uid && "duenno"}`}>
       <div className="infomensaje">
-        <img src="" alt="" />
-        <span>Ahora mismo</span>
+        <img src={mensaje.senderId === currentUser.uid ? currentUser.photoURL : data.usuario.photoURL} alt="" />
       </div>
       <div className="contenidomensaje">
-        <p>Hola</p>
-        <img src="https://espanol.wwe.com/f/styles/og_image/public/all/2016/07/John_Cena_bio--b51ea9d0b6f475af953923ac7791391b.jpg" alt="" />
+        <p>{mensaje.text}</p>
+        {mensaje.img && <img src={mensaje.img} alt="" />}
       </div>
     </div>
   )

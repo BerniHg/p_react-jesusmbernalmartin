@@ -27,8 +27,8 @@ const Buscador = () => {
     }
   };
 
-  const handleKey = (valor) => {
-    valor.code === "Enter" && handleSearch();
+  const handleKey = (envio) => {
+    envio.code === "Enter" && handleSearch();
   };
 
   const handleSelect = async () => {
@@ -75,8 +75,8 @@ const Buscador = () => {
       setUser(null);
       setUsername("");
     }
+    console.log(error)
 
-    
   }
 
   return (
@@ -86,17 +86,17 @@ const Buscador = () => {
           type="text"
           placeholder="Buscar usuario..."
           onKeyDown={handleKey}
-          onChange={(valor) => setUsername(valor.target.value)}
+          onChange={(envio) => setUsername(envio.target.value)}
           value={nombreUsuario}
         />
       </div>
       {error && <span>Usuario no encontrado</span>}
-      {usuario && <div className="chatusuario" onClick={handleSelect}>
+      {usuario && (<div className="chatusuario" onClick={handleSelect}>
           <img src={usuario.photoURL} alt="" />
           <div className="chatinfo">
             <span>{usuario.displayName}</span>
           </div>
-        </div>}
+        </div>)}
     </div>
   );
 };

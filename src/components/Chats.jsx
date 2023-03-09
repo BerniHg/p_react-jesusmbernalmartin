@@ -33,12 +33,12 @@ const Chats = () => {
 
   return (
     <div className="chats">
-      {Object.entries(chats)?.map((chat) => (
+      {Object.entries(chats)?.sort((a, b)=>b[1].date - a[1].date).map((chat) => (
         <div className="chatusuario" key={chat[0]} onClick={()=>handleSelect(chat[1].infoUsuario)}>
           <img src={chat[1].infoUsuario.photoURL} alt="" />
           <div className="chatinfo">
             <span>{chat[1].infoUsuario.displayName}</span>
-            <p>{chat[1].infoUsuario.ultimoMens?.text}</p>
+            <p>{chat[1].ultimoMens?.text}</p>
           </div>
         </div>
       ))}

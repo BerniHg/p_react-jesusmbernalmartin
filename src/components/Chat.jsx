@@ -10,7 +10,7 @@ const Chat = () => {
   const { data } = useContext(ChatContext)
   console.log(data)
   return (
-    <div className="chat">
+    <div className="chat" style={data.chatId === "null" ? { display: "none" } : null}>
       <div className="chatinfo">
         <span>{data.usuario?.displayName}</span>
         <div className="chaticonos">
