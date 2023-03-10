@@ -47,6 +47,3 @@ const Chats = () => {
 };
 
 export default Chats;
-
-// eslint-disable-next-line no-lone-blocks
-{/* oncClick={()=>handleSelect(chat[1].infoUsuario)} */}

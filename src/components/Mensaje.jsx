@@ -9,10 +9,13 @@ const Mensaje = ({mensaje}) => {
   const ref = useRef()
 
   useEffect(() => {
-    ref.current?.scrollIntoView({behavior:"smooth"})
+    if (ref.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth'
+      })
+    }
   }, [mensaje])
 
-  console.log(mensaje)
   return (
     <div ref={ref} className={`mensaje ${mensaje.senderId === currentUser.uid && "duenno"}`}>
       <div className="infomensaje">
@@ -26,4 +29,4 @@ const Mensaje = ({mensaje}) => {
   )
 }
 
-export default Mensaje
+export default Mensaje;

@@ -1,6 +1,5 @@
 import React, {useContext, useState } from 'react'
 import Annadir from "../img/attach.png"
-import Imagen from "../img/annadir2.png"
 import { ChatContext } from '../context/ChatContext'
 import { AuthContext } from '../context/AuthContext'
 import { updateDoc, arrayUnion, Timestamp, doc, serverTimestamp } from 'firebase/firestore'
@@ -15,6 +14,10 @@ const Input = () => {
   const {currentUser} = useContext(AuthContext)
   const {data} = useContext(ChatContext)
 
+  const handleKey = (envio) => {
+    envio.code === "Enter" && handleSend();
+  };
+
   const handleSend = async () => {
 
     if(img)
@@ -25,7 +28,7 @@ const Input = () => {
 
       uploadTask.on(
         (error) => {
-          // errorProducido
+          // setError
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -70,12 +73,11 @@ const Input = () => {
 
   return (
     <div className='input'>
-      <input type="text" placeholder="Escribe un mensaje..." onChange={contenido=>setText(contenido.target.value)} value={text} />
+      <input type="text" placeholder="Escribe un mensaje..." onChange={contenido=>setText(contenido.target.value)} onKeyDown={handleKey} value={text} />
       <div className="enviar">
-        <img src={Annadir} className="annadir" alt="" />
         <input type="file" style={{display:"none"}} id="archivo" onChange={contenido=>setImg(contenido.target.files[0])}/>
         <label htmlFor="archivo">
-          <img src={Imagen} alt="" />
+          <img src={Annadir} alt="" />
         </label>
         <button onClick={handleSend}>Enviar</button>
       </div>

@@ -7,7 +7,8 @@ import { updateDoc } from "firebase/firestore";
 const Buscador = () => {
   const [nombreUsuario, setUsername] = useState("");
   const [usuario, setUser] = useState(null);
-  const [error, errorProducido] = useState(false);
+  const [mostrarUsuario, setMostrarUsuario] = useState(true);
+  const [error, setError] = useState(false);
   const {currentUser} = useContext(AuthContext)
 
   const handleSearch = async () => {
@@ -23,7 +24,7 @@ const Buscador = () => {
         setUser(doc.data());
       });
     } catch (error) {
-      errorProducido(true);
+      setError(true);
     }
   };
 
@@ -74,9 +75,10 @@ const Buscador = () => {
     catch(error){
       setUser(null);
       setUsername("");
+      setError(true);
     }
-    console.log(error)
-
+    
+    setMostrarUsuario(false);
   }
 
   return (
@@ -91,7 +93,7 @@ const Buscador = () => {
         />
       </div>
       {error && <span>Usuario no encontrado</span>}
-      {usuario && (<div className="chatusuario" onClick={handleSelect}>
+      {usuario && mostrarUsuario && (<div className="chatusuario" onClick={handleSelect}>
           <img src={usuario.photoURL} alt="" />
           <div className="chatinfo">
             <span>{usuario.displayName}</span>

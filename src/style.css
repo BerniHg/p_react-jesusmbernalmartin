@@ -4,8 +4,6 @@ body {
   padding: 0;
 }
 
-/* Formularios de Inicio de Sesión y Registro */
-
 .formContainer {
   background-color: #ffc082;
   height: 100vh;
@@ -77,7 +75,7 @@ body {
   font-size: 30px;
 }
 
-.title {
+.titulo {
   color: #d68e5a;
 }
 
@@ -96,7 +94,6 @@ body {
 
 .barralat .barranav {
   display: flex;
-  align-itens: center;
   background-color: #b0652d;
   height: 50px;
   padding: 10px;
@@ -108,20 +105,24 @@ body {
   font-weight: bold;
 }
 
-.menu .user {
+.menu .usuario {
   display: flex;
   gap: 10px;
 }
 
-.user img {
+.usuario .nombre_imagen {
+  align-items: center;
+}
+
+.usuario .nombre_imagen img {
   background-color: white;
-  height: 24px;
-  width: 24px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.user button {
+.menu button {
   background-color: #ed995d;
   color: white;
   font-size: 10px;
@@ -157,15 +158,6 @@ body {
   cursor: pointer;
 }
 
-.chatusuario {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: white;
-  cursor: pointer;
-}
-
 .chatusuario:hover {
   background-color: #b0652d;
 }
@@ -184,6 +176,10 @@ body {
 .chatusuario .chatinfo p {
   font-size: 14px;
   color: lightgray;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 350px;
 }
 
 .menu .chat {
@@ -195,19 +191,20 @@ body {
   background-color: #ed995d;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 10px;
-  color: lightgray;
+  color: white;
 }
 
-.chatinfo .chaticonos {
-  gap: 10px;
-  display: flex;
+.chatinfo .chatnombre {
+  font-size: 18px;
+  padding-left: 10px;
 }
 
-.chatinfo .chaticonos img {
-  height: 24px;
-  cursor: pointer;
+.chatinfo .chatimagen {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .chat .mensajes {
@@ -248,7 +245,9 @@ body {
   background-color: white;
   padding: 10px 20px;
   border-radius: 0px 10px 10px 10px;
-  max-width: max-content;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 400px;
 }
 
 .mensaje .contenidomensaje img {
@@ -307,4 +306,3 @@ body {
   background-color: #ed995d;
   cursor: pointer;
 }
-

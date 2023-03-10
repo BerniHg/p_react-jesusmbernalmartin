@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Foto from "../img/annadirFoto.png";
+import UsuarioFoto from "../img/usuario.jpg";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, baseDatos, storage } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -7,15 +8,16 @@ import { doc, setDoc } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 
 const Registro = () => {
-  const [error, errorProducido] = useState(false);
+  const [error, setError] = useState(false);
   const navigate = useNavigate()
 
   const handleSubmit = async (valores) => {
     valores.preventDefault();
+    console.log(valores.target[3].files[0])
     const nombre = valores.target[0].value;
     const correo = valores.target[1].value;
     const contrasenna = valores.target[2].value;
-    const foto = valores.target[3].files[0];
+    const foto = (!valores.target[3].files[0]) ? UsuarioFoto : valores.target[3].files[0];
     console.log(nombre, correo, contrasenna);
 
     try {
@@ -26,7 +28,7 @@ const Registro = () => {
 
       uploadTask.on(
         (error) => {
-          errorProducido(true);
+          setError(true);
         },
         async () => {
           const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
@@ -53,7 +55,7 @@ const Registro = () => {
       );
     } catch (error) {
       console.log(error)
-      errorProducido(true);
+      setError(true);
     }
   };
 
@@ -61,7 +63,7 @@ const Registro = () => {
     <div className="formContainer">
       <div className="formWrapper">
         <span className="logo">Orange Chat</span>
-        <span className="title">Registro</span>
+        <span className="titulo">Registro</span>
         <form onSubmit={handleSubmit}>
           <input type="text" placeholder="Nombre de usuario" />
           <input type="email" placeholder="Correo electrónico" />
@@ -72,7 +74,7 @@ const Registro = () => {
             <span>Añade una foto de perfil</span>
           </label>
           <button>Regístrate</button>
-          {error && <span>Something went wrong</span>}
+          {error && <span>Algo fue mal.</span>}
         </form>
         <p>¿Ya tienes una cuenta creada? <Link to={"/login"}>Inicia sesión</Link></p>
       </div>
@@ -81,6 +83,3 @@ const Registro = () => {
 };
 
 export default Registro;
-
-// eslint-disable-next-line
-{/* https://youtu.be/k4mjF4sPITE?t=4716 */}
