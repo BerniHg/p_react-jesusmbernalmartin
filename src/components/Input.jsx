@@ -27,9 +27,6 @@ const Input = () => {
       const uploadTask = uploadBytesResumable(storageRef, img);
 
       uploadTask.on(
-        (error) => {
-          // setError
-        },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           await updateDoc(doc(baseDatos, "chats", data.chatId), {

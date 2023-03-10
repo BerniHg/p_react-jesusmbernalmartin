@@ -33,7 +33,6 @@ const Buscador = () => {
   };
 
   const handleSelect = async () => {
-    // busca si existe el chat en la base de datos
     let idCombinado = "";
     
     if(currentUser.uid > usuario.uid)
@@ -49,10 +48,8 @@ const Buscador = () => {
       const datos = await getDoc(doc(baseDatos, "chats", idCombinado))
 
       if(!datos.exists()){
-        // Crear chats en colección
         await setDoc(doc(baseDatos, "chats", idCombinado), {mensajes: [] })
 
-        // crear chats de usuario
         await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
           [idCombinado + ".infoUsuario"]: {
             uid: usuario.uid,
