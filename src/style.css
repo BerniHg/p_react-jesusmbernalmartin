@@ -105,7 +105,7 @@ body {
 
 .menu .usuario {
   display: flex;
-  gap: 10px;
+  gap: 15px;
 }
 
 .usuario .nombre_imagen {
@@ -124,6 +124,7 @@ body {
   background-color: #ed995d;
   color: white;
   font-size: 10px;
+  text-align: right;
   border: none;
   cursor: pointer;
 }

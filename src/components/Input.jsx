@@ -23,50 +23,59 @@ const Input = () => {
     if(img)
     {
       const storageRef = ref(storage, uuid());
-
+  
       const uploadTask = uploadBytesResumable(storageRef, img);
-
-      uploadTask.on(
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          await updateDoc(doc(baseDatos, "chats", data.chatId), {
+  
+      await new Promise((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          () => {},
+          reject,
+          () => {
+            resolve();
+          }
+        );
+      });
+  
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+  
+      await updateDoc(doc(baseDatos, "chats", data.chatId), {
         mensajes: arrayUnion({
-        id: uuid(),
-        text,
-        senderId: currentUser.uid,
-        date: Timestamp.now(),
-        img: downloadURL
+          id: uuid(),
+          text,
+          senderId: currentUser.uid,
+          date: Timestamp.now(),
+          img: downloadURL
+        })
       })
-    })
-        });
     }
     else{
       await updateDoc(doc(baseDatos, "chats", data.chatId), {
-      mensajes: arrayUnion({
-        id: uuid(),
-        text,
-        senderId: currentUser.uid,
-        date: Timestamp.now()
-      })})
+        mensajes: arrayUnion({
+          id: uuid(),
+          text,
+          senderId: currentUser.uid,
+          date: Timestamp.now()
+        })})
     }
-
+  
     await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
       [data.chatId+".ultimoMens"]:{
         text
       },
       [data.chatId+".date"]: serverTimestamp()
     })
-
+  
     await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
       [data.chatId+".ultimoMens"]:{
         text
       },
       [data.chatId+".date"]: serverTimestamp()
     })
-
+  
     setText("")
     setImg(null)
-  }
+  }  
 
   return (
     <div className='input'>

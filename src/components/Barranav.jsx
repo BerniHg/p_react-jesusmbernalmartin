@@ -7,7 +7,6 @@ const Barranav = () => {
   const { currentUser } = useContext(AuthContext);
   return (
     <div className="barranav">
-      <span className="logo">Orange Chat</span>
       <div className="usuario">
         <div className="nombre_imagen">
           <img src={currentUser.photoURL} alt="" />

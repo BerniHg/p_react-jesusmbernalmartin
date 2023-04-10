@@ -37,18 +37,21 @@ const Registro = () => {
 
           console.log('url', downloadURL)
 
-          await updateProfile(datos.user, {
-              displayName: nombre, photoURL: downloadURL 
-          });
-
           console.log('aquí');
           
           await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
             uid: datos.user.uid, displayName: nombre, email: correo, photoURL: downloadURL
           });
 
-          await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
           console.log('aquí 2');
+
+          await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
+
+          console.log('aquí 3');
+
+          await updateProfile(datos.user, {
+            displayName: nombre, photoURL: downloadURL 
+          });
 
           navigate("/login");
         }
