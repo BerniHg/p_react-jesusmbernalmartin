@@ -206,6 +206,18 @@ body {
   object-fit: cover;
 }
 
+.chatopciones {
+  display: flex;
+  align-content: end;
+}
+
+.chatopciones img {
+  width: 30px;
+  height: 30px;
+  align-items: end;
+  padding-right: 10px;
+}
+
 .chat .mensajes {
   background-color: lightgray;
   padding: 10px;

@@ -1,36 +1,48 @@
-import React, { useContext, useState } from "react";
-import { collection, query, where, getDocs, setDoc, getDoc, doc, serverTimestamp } from "firebase/firestore";
 import { baseDatos } from "../firebase";
+import { useState, useEffect, useContext } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { AuthContext } from "../context/AuthContext";
-import { updateDoc } from "firebase/firestore";
 
 const Buscador = () => {
   const [nombreUsuario, setUsername] = useState("");
   const [usuario, setUser] = useState(null);
   const [mostrarUsuario, setMostrarUsuario] = useState(true);
   const [error, setError] = useState(false);
-  const {currentUser} = useContext(AuthContext)
+  const { currentUser } = useContext(AuthContext);
 
-  const handleSearch = async () => {
-    const busqueda = query(
-      collection(baseDatos, "usuarios"),
-      where("displayName", "==", nombreUsuario)
-    );
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (nombreUsuario.trim() === "") {
+        setUser(null);
+        setError(false);
+        return;
+      }
+      
+      const busqueda = query(
+        collection(baseDatos, "usuarios"),
+        where("displayName", "==", nombreUsuario)
+      );
 
-    try {
-      const querySnapshot = await getDocs(busqueda);
-      querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
-        setUser(doc.data());
-      });
-    } catch (error) {
-      setError(true);
-    }
-  };
-
-  const handleKey = (envio) => {
-    envio.code === "Enter" && handleSearch();
-  };
+      try {
+        const querySnapshot = await getDocs(busqueda);
+        if (querySnapshot.size === 0) {
+          setUser(null);
+          setError(true);
+          return;
+        }
+        
+        querySnapshot.forEach((doc) => {
+          setUser(doc.data());
+        });
+        setError(false);
+      } catch (error) {
+        setUser(null);
+        setError(true);
+      }
+    };
+    fetchUser();
+  }, [nombreUsuario]);
 
   const handleSelect = async () => {
     let idCombinado = "";
@@ -84,12 +96,14 @@ const Buscador = () => {
         <input
           type="text"
           placeholder="Buscar usuario..."
-          onKeyDown={handleKey}
           onChange={(envio) => setUsername(envio.target.value)}
           value={nombreUsuario}
         />
       </div>
-      {error && <span>Usuario no encontrado</span>}
+      {error && 
+      <div className="chatusuario">
+        <span>Usuario no encontrado</span>
+      </div>}
       {usuario && mostrarUsuario && (<div className="chatusuario" onClick={handleSelect}>
           <img src={usuario.photoURL} alt="" />
           <div className="chatinfo">

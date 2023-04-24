@@ -9,15 +9,27 @@ import { useNavigate, Link } from "react-router-dom";
 
 const Registro = () => {
   const [error, setError] = useState(false);
+  const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
+
+  const handleSeleccionarFoto = (event) => {
+    const foto = event.target.files[0];
+    setFotoSeleccionada(URL.createObjectURL(foto));
+  };
+
+  const handleCambiarFoto = () => {
+    setFotoSeleccionada(null);
+  };
+
   const navigate = useNavigate()
 
   const handleSubmit = async (valores) => {
     valores.preventDefault();
     console.log(valores.target[3].files[0])
-    const nombre = valores.target[0].value;
+    const nombre = valores.target[0].value; 
     const correo = valores.target[1].value;
+    const canal = `${((nombre.toLowerCase()).split()).join('-')}-channel`;
     const contrasenna = valores.target[2].value;
-    const foto = (!valores.target[3].files[0]) ? UsuarioFoto : valores.target[3].files[0];
+    const foto = fotoSeleccionada ? fotoSeleccionada : UsuarioFoto;
     console.log(nombre, correo, contrasenna);
 
     try {
@@ -40,7 +52,7 @@ const Registro = () => {
           console.log('aquí');
           
           await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
-            uid: datos.user.uid, displayName: nombre, email: correo, photoURL: downloadURL
+            uid: datos.user.uid, displayName: nombre, email: correo, photoURL: downloadURL, channel: canal
           });
 
           console.log('aquí 2');
@@ -68,18 +80,37 @@ const Registro = () => {
         <span className="logo">Orange Chat</span>
         <span className="titulo">Registro</span>
         <form onSubmit={handleSubmit}>
-          <input type="text" placeholder="Nombre de usuario" />
-          <input type="email" placeholder="Correo electrónico" />
-          <input type="password" placeholder="Contraseña" />
-          <input style={{ display: "none" }} type="file" id="archivo" />
+          <input type="text" id="nombre" placeholder="Nombre de usuario" />
+          <input type="email" id="email" placeholder="Correo electrónico" />
+          <input type="password" id="contrasenna" placeholder="Contraseña" />
+          <input
+            style={{ display: "none" }}
+            type="file"
+            id="archivo"
+            accept="image/png,image/jpeg"
+            onChange={handleSeleccionarFoto}
+          />
           <label htmlFor="archivo">
-            <img src={Foto} alt="" />
-            <span>Añade una foto de perfil</span>
+            {fotoSeleccionada ? (
+              <div className="fotoSeleccionadaContainer">
+                <img className="fotoSeleccionada" src={fotoSeleccionada} alt="Foto de perfil seleccionada" />
+                <button type="button" className="cambiarFoto" onClick={handleCambiarFoto}>
+                  Cambiar foto
+                </button>
+              </div>
+            ) : (
+              <div className="fotoContainer">
+                <img className="foto" src={Foto} alt="Añade una foto de perfil" />
+                <span className="anadirFoto">Añade una foto de perfil</span>
+              </div>
+            )}
           </label>
           <button>Regístrate</button>
           {error && <span>Algo fue mal.</span>}
         </form>
-        <p>¿Ya tienes una cuenta creada? <Link to={"/login"}>Inicia sesión</Link></p>
+        <p>
+          ¿Ya tienes una cuenta creada? <Link to={"/login"}>Inicia sesión</Link>
+        </p>
       </div>
     </div>
   );
