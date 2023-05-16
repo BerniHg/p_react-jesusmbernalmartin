@@ -19,6 +19,9 @@ const Input = () => {
   };
 
   const handleSend = async () => {
+    if (!text && !img) {
+      return;
+    }
 
     if(img)
     {
@@ -85,10 +88,10 @@ const Input = () => {
         <label htmlFor="archivo">
           <img src={Annadir} alt="" />
         </label>
-        <button onClick={handleSend}>Enviar</button>
+        <button onClick={handleSend} disabled={!text && !img}>Enviar</button>
       </div>
     </div>
   )
 }
 
-export default Input
+export default Input;

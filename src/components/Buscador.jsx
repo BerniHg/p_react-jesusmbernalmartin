@@ -29,6 +29,7 @@ const Buscador = () => {
         if (querySnapshot.size === 0) {
           setUser(null);
           setError(true);
+          setMostrarUsuario(true);
           return;
         }
         
@@ -39,6 +40,7 @@ const Buscador = () => {
       } catch (error) {
         setUser(null);
         setError(true);
+        setMostrarUsuario(true);
       }
     };
     fetchUser();

@@ -1,15 +1,15 @@
-import React from 'react'
+import React from "react";
 import Barranav from "./Barranav"
 import Buscador from "./Buscador"
 import Chats from "./Chats"
 
-const Barralat = () => {
+const Barralat = ({mostrarBarra}) => {
   return (
-    <div className='barralat'>
-      <Barranav />
-      <Buscador />
-      <Chats />
-    </div>
+    <div className={`barralat ${mostrarBarra ? '' : 'barralat-oculto'}`}>
+    <Barranav />
+    <Buscador />
+    <Chats />
+  </div>
   )
 }
 

@@ -1,20 +1,23 @@
 import React, { useContext } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import Ajustes from "../img/ajustes.png"
+import imgAjustes from "../img/ajustes.png";
 
 const Barranav = () => {
   const { currentUser } = useContext(AuthContext);
   return (
     <div className="barranav">
       <div className="usuario">
-        <div className="nombre_imagen">
-          <img src={currentUser.photoURL} alt="" />
-          <span>{currentUser.displayName}</span>
-        </div>
+        <img src={currentUser.photoURL} alt="" />
+        <span>{currentUser.displayName}</span>
+      </div>
+      <div className="botones_opciones">
         <button onClick={() => signOut(auth)}>cerrar sesión</button>
-        <img src={Ajustes} alt="" srcset="" />
+        <Link to="/ajustes">
+          <img src={imgAjustes} alt=""  />
+        </Link>
       </div>
     </div>
   );

@@ -22,7 +22,8 @@ const Mensaje = ({mensaje}) => {
         <img src={mensaje.senderId === currentUser.uid ? currentUser.photoURL : data.usuario.photoURL} alt="" />
       </div>
       <div className="contenidomensaje">
-        <p>{mensaje.text}</p>
+        {mensaje.text.trim() !== "" && <p>{mensaje.text}</p>}
+        
         {mensaje.img && <img src={mensaje.img} alt="" />}
       </div>
     </div>

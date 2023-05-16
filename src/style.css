@@ -35,6 +35,10 @@ body {
   border-bottom: 1px solid #ffc082;
 }
 
+.formWrapper form input:focus {
+  outline: none;
+}
+
 .formWrapper form input::placeholder {
   color: #d68e5a;
 }
@@ -49,18 +53,27 @@ body {
   cursor: pointer;
 }
 
-.formWrapper label {
+.formWrapper div.fotoContainer {
   display: flex;
-  align-items: center;
   margin-top: 20px;
   margin-bottom: 20px;
   font-size: 12px;
   color: #d68e5a;
   cursor: pointer;
+  align-items: center;
+  gap: 16px;
 }
 
-.formWrapper label img {
-  width: 32px;
+.formWrapper div.fotoSeleccionadaContainer {
+  display: flex;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 16px;
+}
+
+.formWrapper img {
+  width: 50px;
 }
 
 .formWrapper p {
@@ -85,10 +98,18 @@ body {
   display: flex;
 }
 
-.menu .barralat {
-  flex: 1;
+.menu.no_chat{
+  flex-direction: column;
+}
+
+.barralat {
   background-color: #d68e5a;
 }
+
+.menu.no_chat .barralat {
+  flex: 1;
+}
+
 
 .barralat .barranav {
   display: flex;
@@ -97,22 +118,18 @@ body {
   padding: 10px;
   justify-content: space-between;
   color: white;
-}
+  gap: 30px;
 
-.barranav .logo {
-  font-weight: bold;
 }
 
 .menu .usuario {
   display: flex;
   gap: 15px;
-}
-
-.usuario .nombre_imagen {
+  justify-content: space-between;
   align-items: center;
 }
 
-.usuario .nombre_imagen img {
+.usuario img {
   background-color: white;
   width: 35px;
   height: 35px;
@@ -123,10 +140,24 @@ body {
 .menu button {
   background-color: #ed995d;
   color: white;
-  font-size: 10px;
-  text-align: right;
+  width: 85px;
+  font-size: 13px;
+  text-align: center;
   border: none;
   cursor: pointer;
+}
+
+.menu button:hover {
+  background-color: #d68e5a;
+}
+
+.botones_opciones{
+  display: flex;
+  gap: 15px;
+}
+
+.botones_opciones img {
+  width: 50px;
 }
 
 .buscador {
@@ -154,10 +185,17 @@ body {
   align-items: center;
   gap: 10px;
   color: white;
+}
+
+.chats .chatusuario, .buscador .chatusuario {
   cursor: pointer;
 }
 
-.chatusuario:hover {
+.chats .chatusuario {
+  border-bottom: 1px solid lightgray;
+}
+
+.chats .chatusuario:hover, .buscador .chatusuario:hover {
   background-color: #b0652d;
 }
 
@@ -168,8 +206,13 @@ body {
   object-fit: cover;
 }
 
-.chatusuario .chatinfo span {
+.chatusuario .chatinfo span.nombre {
   font-size: 18px;
+}
+
+.chatusuario .chatinfo span.hora {
+  font-size: 14px;
+  color: lightgray;
 }
 
 .chatusuario .chatinfo p {
@@ -178,11 +221,11 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 350px;
+  width: 200px;
 }
 
 .menu .chat {
-  flex: 2;
+  flex: 1;
 }
 
 .chat .chatinfo {
@@ -192,6 +235,7 @@ body {
   align-items: center;
   padding: 10px;
   color: white;
+  justify-content: space-between;
 }
 
 .chatinfo .chatnombre {
@@ -206,9 +250,14 @@ body {
   object-fit: cover;
 }
 
+.chatinfo img.llamada, .chatinfo img.ajustes {
+  cursor: pointer;
+}
+
 .chatopciones {
+  position: relative;
   display: flex;
-  align-content: end;
+  align-items: center;
 }
 
 .chatopciones img {
@@ -218,11 +267,59 @@ body {
   padding-right: 10px;
 }
 
+.chatopciones .opcionesmenu p {
+  margin: 0;
+  padding: 15px;
+  background-color: #b0652d;
+}
+
+.chatopciones .opcionesmenu p:hover {
+  background-color: #d68e5a;
+}
+
+.opcionesmenu {
+  position: absolute;
+  top: 40px;
+  left: -30px;
+  background-color: white;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1;
+}
+
+.opcionesmenu p {
+  margin: 0;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.opcionesmenu p:hover {
+  background-color: #f3f3f3;
+}
+
 .chat .mensajes {
   background-color: lightgray;
   padding: 10px;
   height: calc(100% - 160px);
   overflow: scroll;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-color: #666 #f5f5f5;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d68e5a;
+  border-radius: 20px;
 }
 
 .chat .mensajes .mensaje {
@@ -246,7 +343,7 @@ body {
 }
 
 .mensaje .contenidomensaje {
-  max-width: 80%;
+  max-width: 50%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -258,7 +355,6 @@ body {
   border-radius: 0px 10px 10px 10px;
   word-wrap: break-word;
   word-break: break-word;
-  max-width: 400px;
 }
 
 .mensaje .contenidomensaje img {
@@ -316,4 +412,98 @@ body {
   color: white;
   background-color: #ed995d;
   cursor: pointer;
+}
+
+button.boton-mostrar-barra {
+  height: 100%;
+  border: none;
+  outline: none;
+  width: 40px;
+}
+
+button.boton-mostrar-barra img {
+  max-width: 100%;
+  height: auto;
+} 
+
+.barralat-oculto {
+  display: none;
+}
+
+.icono-flecha {
+  width: 20px;
+  height: 20px;
+  margin-top: 50%;
+  transform: translateY(-50%);
+}
+
+.ajustes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.ajustes a {
+  color: #d68e5a;
+}
+
+.ajustes h2 {
+  color: #d68e5a;
+}
+
+.ajustes form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ajustes form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ajustes form #col_1 {
+  grid-column: 1;
+}
+
+.ajustes label {
+  color: #d68e5a;
+}
+
+.ajustes input[type="file"] {
+  padding: 10px;
+}
+
+.ajustes img {
+  width: 100px;
+  height: 100px;
+  border-radius: 100px;
+  border: black 1px solid;
+}
+
+.ajustes input[type="text"],
+.ajustes input[type="password"] {
+  padding: 10px;
+  border: 1px solid #ffc082;
+}
+
+.ajustes input[type="submit"] {
+  grid-column: 2;
+  background-color: #d68e5a;
+  color: white;
+  padding: 10px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ajustes h2:last-child {
+  color: #d68e5a;
+}
+
+.ajustes label input[type="checkbox"] {
+  margin-right: 5px;
 }

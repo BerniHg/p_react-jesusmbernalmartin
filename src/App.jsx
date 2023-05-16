@@ -1,6 +1,7 @@
 import Login from "./pages/Inicio";
 import Registro from "./pages/Registro";
 import Menu from "./pages/Menu";
+import Ajustes from "./pages/Ajustes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import "./style.css"
@@ -27,6 +28,11 @@ function App() {
             <Menu />
           </ProtectedRoute>
         } />
+        <Route path="ajustes" element={
+            <ProtectedRoute>
+              <Ajustes />
+            </ProtectedRoute>
+          } />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Registro />} />
       </Route>
