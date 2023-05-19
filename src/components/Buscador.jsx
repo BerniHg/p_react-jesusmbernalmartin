@@ -106,7 +106,7 @@ const Buscador = () => {
       <div className="chatusuario">
         <span>Usuario no encontrado</span>
       </div>}
-      {usuario && mostrarUsuario && (<div className="chatusuario" onClick={handleSelect}>
+      {usuario && mostrarUsuario && (<div className="chatusuario user" onClick={handleSelect}>
           <img src={usuario.photoURL} alt="" />
           <div className="chatinfo">
             <span>{usuario.displayName}</span>

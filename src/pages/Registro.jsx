@@ -86,7 +86,7 @@ const Registro = () => {
   };
 
   return (
-    <div className="forzzzmContainer">
+    <div className="formContainer">
       <div className="formWrapper">
         <span className="logo">Orange Chat</span>
         <span className="titulo">Registro</span>

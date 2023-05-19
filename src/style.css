@@ -131,8 +131,8 @@ body {
 
 .usuario img {
   background-color: white;
-  width: 35px;
-  height: 35px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -187,7 +187,7 @@ body {
   color: white;
 }
 
-.chats .chatusuario, .buscador .chatusuario {
+.chats .chatusuario, .buscador .chatusuario.user {
   cursor: pointer;
 }
 
@@ -195,7 +195,7 @@ body {
   border-bottom: 1px solid lightgray;
 }
 
-.chats .chatusuario:hover, .buscador .chatusuario:hover {
+.chats .chatusuario:hover, .buscador .chatusuario.user:hover {
   background-color: #b0652d;
 }
 
@@ -204,6 +204,14 @@ body {
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.chatusuario img.conectado {
+  border: green solid 3px;
+}
+
+.chatusuario img.desconectado {
+  border: crimson solid 3px;
 }
 
 .chatusuario .chatinfo span.nombre {
@@ -248,6 +256,14 @@ body {
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.chatinfo .chatimagen.conectado {
+  border: green solid 3px;
+}
+
+.chatinfo .chatimagen.desconectado  {
+  border: crimson solid 3px;
 }
 
 .chatinfo img.llamada, .chatinfo img.ajustes {
