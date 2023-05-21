@@ -1,126 +1,123 @@
-import { AuthContext } from "../context/AuthContext";
-import { useContext } from "react";
+import React, { useEffect, useRef } from "react";
+import io from "socket.io-client";
 
-const Videollamada = () => {
-  const { currentUser } = useContext(AuthContext);
+const socket = io("http://localhost:3000/");
 
-  const APP_ID = currentUser.uid;
-  const TOKEN = "YOUR TEMP TOKEN";
-  const CHANNEL = currentUser.channel;
+const Videollamada = ({ currentUser, contactoUsuario, offeringCall, answeringCall }) => {
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const peerConnectionRef = useRef(null);
 
-  const client = "AgoraRTC".createClient({ mode: "rtc", codec: "vp8" });
+  useEffect(() => {
+    const startVideollamada = async () => {
+      try {
+        const constraints = { audio: true, video: true };
+        localStreamRef.current = await navigator.mediaDevices.getUserMedia(constraints);
 
-  let localTracks = [];
-  let remoteUsers = {};
+        if (localStreamRef.current) {
+          localVideoRef.current.srcObject = localStreamRef.current;
 
-  let joinAndDisplayLocalStream = async () => {
-    client.on("user-published", handleUserJoined);
+          peerConnectionRef.current = createPeerConnection();
+          addLocalStreamToPeerConnection();
 
-    client.on("user-left", handleUserLeft);
+          peerConnectionRef.current.addEventListener("track", handleRemoteStreamAdded);
 
-    let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
+          socket.on("offer", handleOffer);
+          socket.on("answer", handleAnswer);
+          socket.on("candidate", handleCandidate);
 
-    localTracks = await "AgoraRTC".createMicrophoneAndCameraTracks();
+          if (offeringCall) {
+            const offer = await peerConnectionRef.current.createOffer();
+            await peerConnectionRef.current.setLocalDescription(offer);
 
-    let player = `<div class="video-container" id="user-container-${UID}">
-                        <div class="video-player" id="user-${UID}"></div>
-                  </div>`;
-    document
-      .getElementById("video-streams")
-      .insertAdjacentHTML("beforeend", player);
-
-    localTracks[1].play(`user-${UID}`);
-
-    await client.publish([localTracks[0], localTracks[1]]);
-  };
-
-  let joinStream = async () => {
-    await joinAndDisplayLocalStream();
-    document.getElementById("join-btn").style.display = "none";
-    document.getElementById("stream-controls").style.display = "flex";
-  };
-
-  let handleUserJoined = async (user, mediaType) => {
-    remoteUsers[user.uid] = user;
-    await client.subscribe(user, mediaType);
-
-    if (mediaType === "video") {
-      let player = document.getElementById(`user-container-${user.uid}`);
-      if (player != null) {
-        player.remove();
+            socket.emit("offer", { offer });
+          }
+        } else {
+          console.error("No se pudo obtener el stream local.");
+        }
+      } catch (error) {
+        console.error("Error al iniciar la videollamada:", error);
       }
+    };
 
-      player = `<div class="video-container" id="user-container-${user.uid}">
-                        <div class="video-player" id="user-${user.uid}"></div> 
-                 </div>`;
-      document
-        .getElementById("video-streams")
-        .insertAdjacentHTML("beforeend", player);
+    startVideollamada();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offeringCall]);
 
-      user.videoTrack.play(`user-${user.uid}`);
-    }
+  const createPeerConnection = () => {
+    const configuration = {
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    };
+    const peerConnection = new RTCPeerConnection(configuration);
 
-    if (mediaType === "audio") {
-      user.audioTrack.play();
-    }
+    peerConnection.addEventListener("icecandidate", handleIceCandidate);
+    peerConnection.addEventListener("connectionstatechange", handleConnectionStateChange);
+
+    return peerConnection;
   };
 
-  let handleUserLeft = async (user) => {
-    delete remoteUsers[user.uid];
-    document.getElementById(`user-container-${user.uid}`).remove();
+  const addLocalStreamToPeerConnection = () => {
+    localStreamRef.current.getTracks().forEach((track) => {
+      peerConnectionRef.current.addTrack(track, localStreamRef.current);
+    });
   };
 
-  let leaveAndRemoveLocalStream = async () => {
-    for (let i = 0; localTracks.length > i; i++) {
-      localTracks[i].stop();
-      localTracks[i].close();
-    }
-
-    await client.leave();
-    document.getElementById("join-btn").style.display = "block";
-    document.getElementById("stream-controls").style.display = "none";
-    document.getElementById("video-streams").innerHTML = "";
-  };
-
-  let toggleMic = async (e) => {
-    if (localTracks[0].muted) {
-      await localTracks[0].setMuted(false);
-      e.target.innerText = "Mic on";
-      e.target.style.backgroundColor = "cadetblue";
-    } else {
-      await localTracks[0].setMuted(true);
-      e.target.innerText = "Mic off";
-      e.target.style.backgroundColor = "#EE4B2B";
+  const handleIceCandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("candidate", { candidate: event.candidate });
     }
   };
 
-  let toggleCamera = async (e) => {
-    if (localTracks[1].muted) {
-      await localTracks[1].setMuted(false);
-      e.target.innerText = "Camera on";
-      e.target.style.backgroundColor = "cadetblue";
-    } else {
-      await localTracks[1].setMuted(true);
-      e.target.innerText = "Camera off";
-      e.target.style.backgroundColor = "#EE4B2B";
+  const handleConnectionStateChange = () => {
+    const connectionState = peerConnectionRef.current.connectionState;
+
+    if (connectionState === "connected") {
+      console.log("La videollamada está establecida");
+    } else if (connectionState === "disconnected" || connectionState === "failed" || connectionState === "closed") {
+      console.log("La videollamada ha finalizado");
     }
   };
 
-  document.getElementById("join-btn").addEventListener("click", joinStream);
-  document
-    .getElementById("leave-btn")
-    .addEventListener("click", leaveAndRemoveLocalStream);
-  document.getElementById("mic-btn").addEventListener("click", toggleMic);
-  document.getElementById("camera-btn").addEventListener("click", toggleCamera);
+  const handleRemoteStreamAdded = (event) => {
+    const remoteVideo = remoteVideoRef.current;
+    if (remoteVideo) {
+      remoteVideo.srcObject = event.streams[0];
+    }
+  };
+
+  const handleOffer = async (data) => {
+    try {
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.offer));
+      const answer = await peerConnectionRef.current.createAnswer();
+      await peerConnectionRef.current.setLocalDescription(answer);
+
+      socket.emit("answer", { answer });
+    } catch (error) {
+      console.error("Error al manejar la oferta:", error);
+    }
+  };
+
+  const handleAnswer = async (data) => {
+    try {
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+    } catch (error) {
+      console.error("Error al manejar la respuesta:", error);
+    }
+  };
+
+  const handleCandidate = async (data) => {
+    try {
+      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+    } catch (error) {
+      console.error("Error al manejar el candidato:", error);
+    }
+  };
+
   return (
-    <div id="stream-wrapper">
-      <div id="video-streams"></div>
-
-      <div id="stream-controls">
-        <button id="leave-btn">Leave Stream</button>
-        <button id="mic-btn">Mic On</button>
-        <button id="camera-btn">Camera on</button>
-      </div>
+    <div>
+      <video ref={localVideoRef} autoPlay playsInline />
+      <video ref={remoteVideoRef} autoPlay playsInline />
     </div>
   );
 };

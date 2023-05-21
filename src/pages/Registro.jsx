@@ -4,7 +4,13 @@ import UsuarioFoto from "../img/usuario.jpg";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, baseDatos, storage } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 
 const Registro = () => {
@@ -12,7 +18,7 @@ const Registro = () => {
   const [fotoSeleccionada, setFotoSeleccionada] = useState(false);
 
   const handleSeleccionarFoto = (event) => {
-    const foto = event.target.files[0];
+    let foto = event.target.files[0];
     setFotoSeleccionada(foto);
   };
 
@@ -30,7 +36,7 @@ const Registro = () => {
     const correo = valores.target[2].value;
     const canal = `${nombre_usuario.toLowerCase().split().join("-")}-channel`;
     const contrasenna = valores.target[3].value;
-    const foto = fotoSeleccionada ? fotoSeleccionada : UsuarioFoto;
+    const foto = fotoSeleccionada || UsuarioFoto;
     console.log(nombre_completo, correo, contrasenna);
 
     try {
@@ -62,7 +68,7 @@ const Registro = () => {
             email: correo,
             photoURL: downloadURL,
             channel: canal,
-            connected: false
+            connected: false,
           });
 
           console.log("aquí 2");
@@ -75,6 +81,46 @@ const Registro = () => {
             displayName: nombre_usuario,
             photoURL: downloadURL,
           });
+
+          let apiChat = "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";
+
+          let idCombinado = "";
+
+          if (datos.user.uid > apiChat) {
+            idCombinado = datos.user.uid + apiChat;
+          } else {
+            idCombinado = apiChat + datos.user.uid;
+          }
+
+          const chatGPT = await getDoc(doc(baseDatos, "usuarios", apiChat));
+
+          console.log("aquí 4");
+
+          const datosChat = await getDoc(doc(baseDatos, "chats", idCombinado));
+
+          if (!datosChat.exists()) {
+            await setDoc(doc(baseDatos, "chats", idCombinado), {
+              mensajes: [],
+            });
+
+            const infoUsuario = {
+              uid: chatGPT.data().uid,
+              displayName: chatGPT.data().displayName,
+              photoURL: chatGPT.data().photoURL,
+            };
+
+            const datosUpdate = {
+              [`${idCombinado}.infoUsuario`]: infoUsuario,
+              [`${idCombinado}.fecha`]: serverTimestamp(),
+            };
+
+            await updateDoc(
+              doc(baseDatos, "chatsUsuarios", datos.user.uid),
+              datosUpdate
+            );
+          }
+
+          console.log("aqui 5");
 
           navigate("/login");
         }

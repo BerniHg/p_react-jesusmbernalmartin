@@ -68,7 +68,9 @@ const Chats = () => {
               <img
                 src={chat[1].infoUsuario.photoURL}
                 alt={chat[1].infoUsuario.displayName}
-                className={connected ? "conectado" : "desconectado"}
+                className={`chatimagen ${
+                  connected ? "conectado" : (data.usuario.displayName !== "ChatGPT" ? "desconectado" : "")
+                }`}
               />
               <div className="chatinfo">
                 <span>{chat[1].infoUsuario.displayName}</span>
