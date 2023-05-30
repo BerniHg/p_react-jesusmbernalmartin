@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { useState, useEffect, useContext } from "react";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 import { baseDatos } from "../firebase";
+import PaginaCarga from "../components/PaginaCarga";
+import { AuthContext } from "../context/AuthContext";
 
 const UsuariosOrg = () => {
+  const { currentUser } = useContext(AuthContext);
   const [usuarios, setUsuarios] = useState([]);
   const [fotoSeleccionada, setFotoSeleccionada] = useState(false);
   const [edicionUsuarios, setEdicionUsuarios] = useState({});
@@ -13,6 +23,8 @@ const UsuariosOrg = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [usuariosPorPagina] = useState(5);
   const [mostrarUsuarios, setMostrarUsuarios] = useState("todos");
+  const [rolUsuario, setRolUsuario] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const handleSeleccionarFoto = (event) => {
     let foto = event.target.files[0];
@@ -90,28 +102,21 @@ const UsuariosOrg = () => {
     }
   };
 
-  const actualizarUsuario = async (uid) => {
-    const usuarioActualizado = datosEditados[uid];
-
+  const obtenerRolUsuario = async (uid) => {
     try {
-      await updateDoc(doc(baseDatos, "usuarios", uid), usuarioActualizado);
-      console.log("Usuario actualizado correctamente.");
+      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        const userRole = usuarioData.role;
+        console.log(userRole);
+        setRolUsuario(userRole);
+      }
     } catch (error) {
-      console.error("Error al actualizar el usuario:", error);
+      console.log(error);
     }
   };
 
-  useEffect(() => {
-    const obtenerUsuarios = async () => {
-      const usuariosSnapshot = await getDocs(collection(baseDatos, "usuarios"));
-      const usuariosData = usuariosSnapshot.docs.map((doc) => doc.data());
-      setUsuarios(usuariosData);
-    };
-
-    obtenerUsuarios();
-  }, []);
-
-  // Función para obtener la lista de usuarios a mostrar en la página actual
   const obtenerUsuariosPaginados = () => {
     const indiceUltimoUsuario = paginaActual * usuariosPorPagina;
     const indicePrimerUsuario = indiceUltimoUsuario - usuariosPorPagina;
@@ -158,6 +163,8 @@ const UsuariosOrg = () => {
     if (valorA > valorB) return ordenAscendente ? 1 : -1;
     return 0;
   });
+  
+  const totalPaginas = Math.ceil(usuariosOrdenados.length / usuariosPorPagina);
 
   // Actualizar la lista de usuarios a mostrar cuando se cambie la página actual o la cantidad de usuarios por página
   const usuariosPaginados = obtenerUsuariosPaginados();
@@ -177,10 +184,33 @@ const UsuariosOrg = () => {
     }
   };
 
-  const guardarCambiosUsuario = (uid) => {
+  const guardarCambiosUsuario = async (uid) => {
     toggleEdicionUsuario(uid);
-    actualizarUsuario(uid);
+    setCargando(true); // Activa la pantalla de carga
+
+    try {
+      await updateDoc(doc(baseDatos, "usuarios", uid), datosEditados[uid]);
+      console.log("Usuario actualizado correctamente.");
+    } catch (error) {
+      console.error("Error al actualizar el usuario:", error);
+    }
+
+    setCargando(false); // Desactiva la pantalla de carga
   };
+
+  useEffect(() => {
+    const obtenerUsuarios = async () => {
+      const usuariosSnapshot = await getDocs(collection(baseDatos, "usuarios"));
+      const usuariosData = usuariosSnapshot.docs.map((doc) => doc.data());
+      setUsuarios(usuariosData);
+    };
+
+    obtenerUsuarios();
+
+    if (currentUser) {
+      obtenerRolUsuario(currentUser.uid);
+    }
+  }, [currentUser]);
 
   return (
     <div className="config">
@@ -223,8 +253,8 @@ const UsuariosOrg = () => {
             <th>Rol</th>
             <th>Nombre completo</th>
             <th>Nombre</th>
-            <th>Email</th>
             <th>Foto</th>
+            <th>Email</th>
             <th colSpan={2}>Conectado</th>
           </tr>
         </thead>
@@ -232,12 +262,46 @@ const UsuariosOrg = () => {
           {usuariosPaginados.map((usuario) =>
             usuario.displayName !== "ChatGPT" ? (
               <tr key={usuario.uid}>
-                {edicionUsuarios[usuario.uid] ? (
+                {cargando ? (
+                  <td colSpan={6}>
+                    <PaginaCarga />
+                  </td>
+                ) : edicionUsuarios[usuario.uid] ? (
                   <>
+                    <td>
+                      <select
+                        name="rol"
+                        id="rol"
+                        value={usuario.role}
+                        onChange={(e) =>
+                          setDatosEditados((prevState) => ({
+                            ...prevState,
+                            [usuario.uid]: {
+                              ...prevState[usuario.uid],
+                              role: e.target.value,
+                            },
+                          }))
+                        }
+                      >
+                        {rolUsuario === "chief" && (
+                          <>
+                            <option value="chief">Jefe</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">Usuario</option>
+                          </>
+                        )}
+                        {rolUsuario === "admin" && (
+                          <>
+                            <option value="admin">Admin</option>
+                            <option value="user">Usuario</option>
+                          </>
+                        )}
+                      </select>
+                    </td>
                     <td>
                       <input
                         type="text"
-                        value={datosEditados[usuario.uid]?.fullName}
+                        value={datosEditados[usuario.uid]?.fullName || ""}
                         onChange={(e) =>
                           setDatosEditados((prevState) => ({
                             ...prevState,
@@ -252,28 +316,13 @@ const UsuariosOrg = () => {
                     <td>
                       <input
                         type="text"
-                        value={datosEditados[usuario.uid]?.displayName}
+                        value={datosEditados[usuario.uid]?.displayName || ""}
                         onChange={(e) =>
                           setDatosEditados((prevState) => ({
                             ...prevState,
                             [usuario.uid]: {
                               ...prevState[usuario.uid],
                               displayName: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={datosEditados[usuario.uid]?.email}
-                        onChange={(e) =>
-                          setDatosEditados((prevState) => ({
-                            ...prevState,
-                            [usuario.uid]: {
-                              ...prevState[usuario.uid],
-                              email: e.target.value,
                             },
                           }))
                         }
@@ -299,10 +348,12 @@ const UsuariosOrg = () => {
                         />
                       </label>
                     </td>
+                    <td>{usuario.email}</td>
                     <td>{usuario.connected ? "Conectado" : "Desconectado"}</td>
-                    <td>{usuario.role}</td>
                     <td className="botones">
-                      <button onClick={() => guardarCambiosUsuario(usuario.uid)}>
+                      <button
+                        onClick={() => guardarCambiosUsuario(usuario.uid)}
+                      >
                         Guardar
                       </button>
                       <button
@@ -314,10 +365,13 @@ const UsuariosOrg = () => {
                   </>
                 ) : (
                   <>
-                    <td>{usuario.role}</td>
+                    <td>
+                      {usuario.role === "chief" && <>Jefe</>}
+                      {usuario.role === "admin" && <>Admin</>}
+                      {usuario.role === "user" && <>Usuario</>}
+                    </td>
                     <td>{usuario.fullName}</td>
                     <td>{usuario.displayName}</td>
-                    <td>{usuario.email}</td>
                     <td>
                       <img
                         src={usuario.photoURL}
@@ -325,6 +379,7 @@ const UsuariosOrg = () => {
                         style={{ width: "100px" }}
                       />
                     </td>
+                    <td>{usuario.email}</td>
                     <td>{usuario.connected ? "Conectado" : "Desconectado"}</td>
                     <td className="botones">
                       <button onClick={() => toggleEdicionUsuario(usuario.uid)}>
@@ -344,9 +399,16 @@ const UsuariosOrg = () => {
         </tbody>
       </table>
       <div className="paginacion">
-        <button onClick={handlePaginaAnterior}>&lt; Anterior</button>
+        <button onClick={handlePaginaAnterior} disabled={paginaActual === 1}>
+          &lt; Anterior
+        </button>
         <span>{paginaActual}</span>
-        <button onClick={handlePaginaSiguiente}>Siguiente &gt;</button>
+        <button
+          onClick={handlePaginaSiguiente}
+          disabled={paginaActual === totalPaginas}
+        >
+          Siguiente &gt;
+        </button>
       </div>
     </div>
   );

@@ -143,6 +143,7 @@ button {
   background-color: #ffc082;
   height: 100vh;
   display: flex;
+  overflow-y: hidden;
 }
 
 .menu.no_chat {
@@ -548,8 +549,15 @@ button.boton-mostrar-barra img {
   padding: 20px;
 }
 
-.ajustes a {
+.ajustes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ajustes-header a {
   color: #d68e5a;
+  text-decoration: none;
 }
 
 .ajustes h2 {
@@ -562,14 +570,8 @@ button.boton-mostrar-barra img {
   gap: 10px;
 }
 
-.ajustes form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.ajustes form #col_1 {
-  grid-column: 1;
+.ajustes-section {
+  grid-column: span 2;
 }
 
 .ajustes label {
@@ -586,16 +588,19 @@ button.boton-mostrar-barra img {
   border: 2px solid #b0652d;
   border-radius: 50%;
   object-fit: cover;
+  cursor: pointer;
 }
 
 .ajustes input[type="text"],
-.ajustes input[type="password"] {
+.ajustes input[type="password"],
+.ajustes textarea {
   padding: 10px;
   border: 1px solid #ffc082;
+  width: 100%;
 }
 
-.ajustes input[type="submit"] {
-  grid-column: 2;
+.ajustes .submit-btn {
+  grid-column: span 2;
   background-color: #d68e5a;
   color: white;
   padding: 10px;

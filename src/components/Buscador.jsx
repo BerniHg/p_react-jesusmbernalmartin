@@ -1,12 +1,13 @@
 import { baseDatos } from "../firebase";
-import { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useState, useEffect, useContext } from "react";
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { AuthContext } from "../context/AuthContext";
 
 const Buscador = () => {
   const [nombreUsuario, setNombreUsuario] = useState("");
-  const [usuario, setUsuario] = useState(null);
-  const [mostrarUsuario] = useState(true);
+  const [mostrarUsuario, setMostrarUsuario] = useState(false);
   const [error, setError] = useState(false);
+  const { currentUser } = useContext(AuthContext);
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
 
@@ -26,15 +27,56 @@ const Buscador = () => {
         usuario.displayName.toLowerCase().startsWith(nombreUsuario.toLowerCase())
       );
       setUsuariosFiltrados(usuariosFiltrados);
+      setMostrarUsuario(false);
+      setError(false);
+
+      if (nombreUsuario.trim() !== "" && usuariosFiltrados.length === 0) {
+        setError(true);
+      }
     };
 
     filtrarUsuarios();
   }, [nombreUsuario, usuarios]);
 
-  const handleSelect = (usuarioSeleccionado) => {
-    setUsuario(usuarioSeleccionado);
-    setNombreUsuario(usuarioSeleccionado.displayName);
-    setError(false);
+  const handleSelect = async (usuarioSeleccionado) => {
+    let idCombinado = "";
+
+    if (currentUser.uid > usuarioSeleccionado.uid) {
+      idCombinado = currentUser.uid + usuarioSeleccionado.uid;
+    } else {
+      idCombinado = usuarioSeleccionado.uid + currentUser.uid;
+    }
+
+    try {
+      const datos = await getDoc(doc(baseDatos, "chats", idCombinado));
+
+      if (!datos.exists()) {
+        await setDoc(doc(baseDatos, "chats", idCombinado), { mensajes: [] });
+
+        await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
+          [idCombinado + ".infoUsuario"]: {
+            uid: usuarioSeleccionado.uid,
+            displayName: usuarioSeleccionado.displayName,
+            photoURL: usuarioSeleccionado.photoURL,
+          },
+          [idCombinado + ".fecha"]: serverTimestamp(),
+        });
+
+        await updateDoc(doc(baseDatos, "chatsUsuarios", usuarioSeleccionado.uid), {
+          [idCombinado + ".infoUsuario"]: {
+            uid: currentUser.uid,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+          },
+          [idCombinado + ".fecha"]: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      setNombreUsuario("");
+      setError(true);
+    }
+
+    setMostrarUsuario(false);
   };
 
   return (
@@ -53,6 +95,7 @@ const Buscador = () => {
         </div>
       )}
       {nombreUsuario &&
+        !error &&
         usuariosFiltrados.map((usuario) => (
           <div
             key={usuario.id}
@@ -65,11 +108,11 @@ const Buscador = () => {
             </div>
           </div>
         ))}
-      {usuario && mostrarUsuario && (
-        <div className="chatusuario user">
-          <img src={usuario.photoURL} alt="" />
+      {mostrarUsuario && currentUser && (
+        <div className="chatusuario user" onClick={() => handleSelect(currentUser)}>
+          <img src={currentUser.photoURL} alt="" />
           <div className="chatinfo">
-            <span>{usuario.displayName}</span>
+            <span>{currentUser.displayName}</span>
           </div>
         </div>
       )}

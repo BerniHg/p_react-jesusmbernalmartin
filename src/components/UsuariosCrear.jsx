@@ -30,6 +30,7 @@ const UsuariosCrear = () => {
   const [fotoSeleccionada, setFotoSeleccionada] = useState(false);
   const [errors, setErrors] = useState({});
   const [mostrarPaginaCarga, setMostrarPaginaCarga] = useState(false);
+  const [rolUsuario, setRolUsuario] = useState("");
 
   const obtenerRolUsuario = async (uid) => {
     try {
@@ -39,7 +40,7 @@ const UsuariosCrear = () => {
         const usuarioData = usuarioDocSnap.data();
         const userRole = usuarioData.role;
         console.log(userRole);
-        return userRole;
+        setRolUsuario(userRole);
       }
     } catch (error) {
       console.log(error);
@@ -189,13 +190,12 @@ const UsuariosCrear = () => {
         <PaginaCarga />
       ) : (
         <div className="formWrapper">
-          <span className="titulo">Registro</span>
           <form onSubmit={handleSubmit}>
             <select name="rol" id="rol">
-              {currentUser.role === "chief" && (
+              {rolUsuario === "chief" && (
                 <option value="chief">Jefe</option>
               )}
-              {(obtenerRolUsuario === "chief" || obtenerRolUsuario === "admin") && (
+              {(rolUsuario === "chief" || rolUsuario === "admin") && (
                 <option value="admin">Admin</option>
               )}
               <option value="user" selected>
