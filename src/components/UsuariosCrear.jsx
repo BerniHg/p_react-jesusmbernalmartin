@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Foto from "../img/annadirFoto.png";
 import UsuarioFoto from "../img/usuario.jpg";
 import PaginaCarga from "../components/PaginaCarga";
@@ -8,9 +8,14 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {
   doc,
   setDoc,
-  where, query, getDocs, collection
+  where,
+  query,
+  getDocs,
+  getDoc,
+  collection,
 } from "firebase/firestore";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const regexNombreCompleto =
   /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+){0,3}$/;
@@ -19,11 +24,29 @@ const regexCorreoElectronico = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const regexContrasena =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_])[a-zA-Z\d-_]{8,}$/;
 
-const Registro = () => {
+const UsuariosCrear = () => {
+  const { currentUser } = useContext(AuthContext);
   const [error, setError] = useState(false);
   const [fotoSeleccionada, setFotoSeleccionada] = useState(false);
   const [errors, setErrors] = useState({});
   const [mostrarPaginaCarga, setMostrarPaginaCarga] = useState(false);
+
+  const obtenerRolUsuario = async (uid) => {
+    try {
+      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        const userRole = usuarioData.role;
+        console.log(userRole);
+        return userRole;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  console.log(obtenerRolUsuario)
 
   const handleSeleccionarFoto = (event) => {
     let foto = event.target.files[0];
@@ -38,53 +61,57 @@ const Registro = () => {
 
   const handleSubmit = async (valores) => {
     valores.preventDefault();
-    const nombre_completo = valores.target[0].value;
-    const nombre_usuario = valores.target[1].value;
-    const correo = valores.target[2].value;
-    const contrasenna = valores.target[3].value;
+    const rol = valores.target[0].value;
+    const nombre_completo = valores.target[1].value;
+    const nombre_usuario = valores.target[2].value;
+    const correo = valores.target[3].value;
+    const contrasenna = valores.target[4].value;
     const foto = fotoSeleccionada || UsuarioFoto;
-  
+
     const errors = {};
-  
+
     const nombreUsuarioSnapshot = await getDocs(
-      query(collection(baseDatos, "usuarios"), where("displayName", "==", nombre_usuario))
+      query(
+        collection(baseDatos, "usuarios"),
+        where("displayName", "==", nombre_usuario)
+      )
     );
-  
+
     if (!nombreUsuarioSnapshot.empty) {
       errors.nombre_usuario = "El nombre de usuario ya está en uso";
     }
-  
+
     const correoSnapshot = await getDocs(
       query(collection(baseDatos, "usuarios"), where("email", "==", correo))
     );
-  
+
     if (!correoSnapshot.empty) {
       errors.correo = "El correo electrónico ya está en uso";
     }
-  
+
     if (!regexNombreCompleto.test(nombre_completo)) {
       errors.nombre_completo = "El nombre completo no es válido.";
     }
-  
+
     if (!regexNombreUsuario.test(nombre_usuario)) {
       errors.nombre_usuario = "El nombre de usuario no es válido.";
     }
-  
+
     if (!regexCorreoElectronico.test(correo)) {
       errors.correo = "El correo electrónico no es válido.";
     }
-  
+
     if (!regexContrasena.test(contrasenna)) {
       errors.contrasenna = "La contraseña no es válida.";
     }
-  
+
     setErrors(errors);
-  
+
     if (Object.keys(errors).length === 0) {
       try {
         const storageRef = ref(storage, nombre_completo);
         const uploadTask = uploadBytesResumable(storageRef, foto);
-  
+
         uploadTask.on(
           "state_changed",
           (snapshot) => {},
@@ -94,10 +121,14 @@ const Registro = () => {
           async () => {
             try {
               setMostrarPaginaCarga(true);
-  
-              const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
+
+              const datos = await createUserWithEmailAndPassword(
+                auth,
+                correo,
+                contrasenna
+              );
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-  
+
               await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
                 uid: datos.user.uid,
                 fullName: nombre_completo,
@@ -105,16 +136,16 @@ const Registro = () => {
                 email: correo,
                 photoURL: downloadURL,
                 connected: false,
-                role: "user"
+                role: rol,
               });
-  
+
               await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
-  
+
               await updateProfile(datos.user, {
                 displayName: nombre_usuario,
                 photoURL: downloadURL,
               });
-  
+
               navigate("/login");
             } catch (error) {
               console.log(error);
@@ -150,8 +181,7 @@ const Registro = () => {
     return () => {
       togglePasswordButton.removeEventListener("click", handleTogglePassword);
     };
-  }, []);
-  
+  }, [currentUser]);
 
   return (
     <div className="formContainer">
@@ -159,9 +189,19 @@ const Registro = () => {
         <PaginaCarga />
       ) : (
         <div className="formWrapper">
-          <span className="logo">Orange Chat</span>
           <span className="titulo">Registro</span>
           <form onSubmit={handleSubmit}>
+            <select name="rol" id="rol">
+              {currentUser.role === "chief" && (
+                <option value="chief">Jefe</option>
+              )}
+              {(obtenerRolUsuario === "chief" || obtenerRolUsuario === "admin") && (
+                <option value="admin">Admin</option>
+              )}
+              <option value="user" selected>
+                Usuario
+              </option>
+            </select>
             <input
               type="text"
               id="nombre_completo"
@@ -181,10 +221,10 @@ const Registro = () => {
             <input type="email" id="email" placeholder="Correo electrónico" />
             {errors.correo && <span className="error">{errors.correo}</span>}
             <div className="input-password-container">
-            <input type="password" placeholder="Contraseña" id="password" />
-            <button type="button" id="togglePassword">
-              Mostrar
-            </button>
+              <input type="password" placeholder="Contraseña" id="password" />
+              <button type="button" id="togglePassword">
+                Mostrar
+              </button>
             </div>
             {errors.contrasenna && (
               <span className="error">{errors.contrasenna}</span>
@@ -201,11 +241,14 @@ const Registro = () => {
                 <img
                   className="fotoSeleccionada"
                   src={URL.createObjectURL(fotoSeleccionada)}
-                  alt="Foto de perfil seleccionada" style={{"width": "90px",
-                    "height": "90px",
-                    "border": "2px solid #b0652d",
+                  alt="Foto de perfil seleccionada"
+                  style={{
+                    width: "90px",
+                    height: "90px",
+                    border: "2px solid #b0652d",
                     "border-radius": "50%",
-                    "object-fit": "cover"}}
+                    "object-fit": "cover",
+                  }}
                 />
                 <button
                   type="button"
@@ -231,7 +274,7 @@ const Registro = () => {
               </label>
             )}
             <button type="submit" className="boton">
-              Registrarse
+              Registrar nuevo usuario
             </button>
             {error && (
               <span className="error">
@@ -239,10 +282,6 @@ const Registro = () => {
                 nuevamente.
               </span>
             )}
-            <p>
-              ¿Ya tienes una cuenta creada?{" "}
-              <Link to={"/login"}>Inicia sesión</Link>
-            </p>
           </form>
         </div>
       )}
@@ -250,4 +289,4 @@ const Registro = () => {
   );
 };
 
-export default Registro;
+export default UsuariosCrear;

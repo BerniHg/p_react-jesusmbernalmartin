@@ -1,7 +1,19 @@
 body {
-  font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+select,
+button {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
 }
 
 .formContainer {
@@ -31,7 +43,7 @@ body {
 .formWrapper form input {
   padding: 15px;
   border: none;
-  width: 250px;
+  width: 90%;
   border-bottom: 1px solid #ffc082;
 }
 
@@ -51,6 +63,28 @@ body {
   border: none;
   border-radius: 10px;
   cursor: pointer;
+}
+
+.input-password-container {
+  display: flex;
+  align-items: center;
+}
+
+.input-password-container input#password {
+  flex: 1;
+  margin-right: 20px;
+}
+
+#togglePassword {
+  padding: 8px 12px;
+  background-color: #ed995d;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#togglePassword:hover {
+  background-color: #d68e5a;
 }
 
 .formWrapper div.fotoContainer {
@@ -73,13 +107,26 @@ body {
 }
 
 .formWrapper img {
-  width: 50px;
+  width: 90px;
+}
+
+.formWrapper img.fotoSeleccionada {
+  width: 90px;
+  height: 90px;
+  border: 2px solid #b0652d;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .formWrapper p {
   color: #d68e5a;
   font-size: 13px;
   margin-top: 10px;
+}
+
+.formWrapper a {
+  color: #b0652d;
+  text-decoration: none;
 }
 
 .formWrapper .logo {
@@ -98,7 +145,7 @@ body {
   display: flex;
 }
 
-.menu.no_chat{
+.menu.no_chat {
   flex-direction: column;
 }
 
@@ -110,7 +157,6 @@ body {
   flex: 1;
 }
 
-
 .barralat .barranav {
   display: flex;
   background-color: #b0652d;
@@ -119,7 +165,6 @@ body {
   justify-content: space-between;
   color: white;
   gap: 30px;
-
 }
 
 .menu .usuario {
@@ -151,7 +196,7 @@ body {
   background-color: #d68e5a;
 }
 
-.botones_opciones{
+.botones_opciones {
   display: flex;
   gap: 15px;
 }
@@ -187,7 +232,19 @@ body {
   color: white;
 }
 
-.chats .chatusuario, .buscador .chatusuario.user {
+.chats {
+  height: 85vh;
+  overflow-y: scroll;
+}
+
+.chats::-webkit-scrollbar {
+  width: 10px;
+  height: 0;
+  color: #ed995d;
+}
+
+.chats .chatusuario,
+.buscador .chatusuario.user {
   cursor: pointer;
 }
 
@@ -195,7 +252,16 @@ body {
   border-bottom: 1px solid lightgray;
 }
 
-.chats .chatusuario:hover, .buscador .chatusuario.user:hover {
+.chats .chatusuario:hover {
+  background-color: #b0652d;
+}
+
+.chats .chatusuario {
+  border-bottom: 1px solid lightgray;
+}
+
+.chats .chatusuario:hover,
+.buscador .chatusuario.user:hover {
   background-color: #b0652d;
 }
 
@@ -224,12 +290,17 @@ body {
 }
 
 .chatusuario .chatinfo p {
-  font-size: 14px;
-  color: lightgray;
+  font-size: 16px;
+  color: #ddd;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   width: 200px;
+}
+
+.chatusuario .chatinfo p.hora {
+  font-size: 14px;
+  color: lightgray;
 }
 
 .menu .chat {
@@ -262,11 +333,12 @@ body {
   border: green solid 3px;
 }
 
-.chatinfo .chatimagen.desconectado  {
+.chatinfo .chatimagen.desconectado {
   border: crimson solid 3px;
 }
 
-.chatinfo img.llamada, .chatinfo img.ajustes {
+.chatinfo img.llamada,
+.chatinfo img.ajustes {
   cursor: pointer;
 }
 
@@ -374,7 +446,7 @@ body {
 }
 
 .mensaje .contenidomensaje img {
-  width: 50%;
+  width: 200px;
 }
 
 .mensaje.duenno {
@@ -389,6 +461,23 @@ body {
   background-color: #b0652d;
   color: white;
   border-radius: 10px 0px 10px 10px;
+}
+
+.mensaje.contacto .infomensaje {
+  color: blue;
+}
+
+.mensaje.contacto .contenidomensaje p {
+  background-color: whitesmoke;
+  border-radius: 0px 10px 10px 10px;
+  width: fit-content;
+}
+
+.mensaje .hora {
+  font-size: 12px;
+  color: gray;
+  align-self: flex-end;
+  margin-top: auto;
 }
 
 .chat .input {
@@ -419,7 +508,6 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-
 }
 
 .input button {
@@ -440,7 +528,7 @@ button.boton-mostrar-barra {
 button.boton-mostrar-barra img {
   max-width: 100%;
   height: auto;
-} 
+}
 
 .barralat-oculto {
   display: none;
@@ -493,10 +581,11 @@ button.boton-mostrar-barra img {
 }
 
 .ajustes img {
-  width: 100px;
-  height: 100px;
-  border-radius: 100px;
-  border: black 1px solid;
+  width: 90px;
+  height: 90px;
+  border: 2px solid #b0652d;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .ajustes input[type="text"],
@@ -522,4 +611,264 @@ button.boton-mostrar-barra img {
 
 .ajustes label input[type="checkbox"] {
   margin-right: 5px;
+}
+
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-container .admin-buttons {
+  margin-bottom: 20px;
+}
+
+.admin-container .admin-buttons button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  font-size: 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-container .admin-content {
+  border-top: 1px solid orange;
+  margin-bottom: 20px;
+  width: 80%;
+}
+
+.config {
+  padding: 20px;
+}
+
+.config .filtros {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.config .filtros input[type="text"] {
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.config .filtros select {
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.config .filtros button {
+  margin-right: 10px;
+  padding: 5px 10px;
+}
+
+.config .filtros select:last-child {
+  margin-right: 0;
+}
+
+.config table {
+  width: 100%;
+  border-collapse: collapse;
+  border: solid 5px #b0652d;
+  border-radius: 1em;
+  overflow: hidden;
+}
+
+.config table th,
+.config table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.config table tbody {
+  background-color: #f2f2f2;
+}
+
+.config table th {
+  background-color: #ffc082;
+}
+
+.config table tr:hover {
+  background-color: #f5f5f5;
+}
+
+.config table input[type="text"] {
+  width: 85%;
+  padding: 5px;
+}
+
+.config table img {
+  height: 100px;
+  border-radius: 50px;
+  object-fit: cover;
+}
+
+.config table button {
+  border: none;
+  padding: 10px 15px;
+  color: white;
+  background-color: #ed995d;
+  cursor: pointer;
+  margin: 10px;
+  width: 100px;
+  border-radius: 10px;
+}
+
+.config table button:hover {
+  background-color: #d68e5a;
+}
+
+.config table td.botones {
+  text-align: center;
+}
+
+.config .paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.config .paginacion button {
+  margin: 0 5px;
+  padding: 5px 10px;
+}
+
+.config .paginacion span {
+  margin: 0 5px;
+  font-weight: bold;
+}
+
+.formCrear {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.formCrear .form {
+  max-width: 400px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.formCrear .titulo {
+  display: block;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.formCrear .error {
+  display: block;
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.formCrear .input-password-container {
+  position: relative;
+}
+
+.formCrear .input-password-container input[type="password"] {
+  padding-right: 35px;
+}
+
+.formCrear .input-password-container button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  padding: 5px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.formCrear .fotoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.formCrear .fotoContainer .foto {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 10px;
+}
+
+.formCrear .anadirFoto {
+  font-size: 14px;
+  color: #b0652d;
+  cursor: pointer;
+}
+
+.formCrear .fotoSeleccionadaContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.formCrear .cambiarFoto,
+.formCrear .eliminarFoto {
+  margin-left: 10px;
+  font-size: 12px;
+  padding: 5px 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.formCrear .boton {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background-color: #b0652d;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.formCrear .error {
+  display: block;
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-container .admin-buttons {
+  margin-bottom: 20px;
+}
+
+.admin-container .admin-buttons button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  font-size: 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-container .admin-content {
+  margin-bottom: 20px;
 }

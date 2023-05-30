@@ -8,11 +8,14 @@ import { doc, updateDoc, getDoc } from "firebase/firestore";
 import Telefono from "../img/telefono.png";
 import Puntos from "../img/puntos.png";
 import Videollamada from "./Videollamada";
+// import { isDisabled } from "@testing-library/user-event/dist/utils";
 
 const Chat = () => {
   const { data } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
   console.log(data);
+   
+  //const regexNombreUsuario = /^[a-zA-Z0-9_-]{4,16}$/;
 
   const [isOpen, setIsOpen] = useState(false);
   const [nameClicked, setNameClicked] = useState(false);
@@ -55,9 +58,7 @@ const Chat = () => {
   useEffect(() => {
     const fetchConnected = async () => {
       try {
-        const userDoc = await getDoc(
-          doc(baseDatos, "usuarios", data.usuario.uid)
-        );
+        const userDoc = await getDoc(doc(baseDatos, "usuarios", data.usuario.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
           const connectedValue = userData.connected || false;
@@ -67,9 +68,16 @@ const Chat = () => {
         console.log("Error al obtener el valor de connected:", error);
       }
     };
-
+  
     fetchConnected();
+  
+    const interval = setInterval(fetchConnected, 5000);
+  
+    return () => {
+      clearInterval(interval);
+    };
   }, [data.usuario.uid]);
+  
 
   return (
     <>
@@ -108,7 +116,7 @@ const Chat = () => {
                   <input
                     type="text"
                     value={nuevoNombre}
-                    onChange={(event) => setNuevoNombre(event.target.value)}
+                    onChange={(event) => setNuevoNombre(event.target.value)} id="nuevoNombre"
                   />
                   <input
                     type="button"

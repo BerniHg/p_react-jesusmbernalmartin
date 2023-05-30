@@ -1,96 +1,41 @@
 import { baseDatos } from "../firebase";
-import { useState, useEffect, useContext } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { AuthContext } from "../context/AuthContext";
+import { useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
 
 const Buscador = () => {
-  const [nombreUsuario, setUsername] = useState("");
-  const [usuario, setUser] = useState(null);
-  const [mostrarUsuario, setMostrarUsuario] = useState(true);
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const [usuario, setUsuario] = useState(null);
+  const [mostrarUsuario] = useState(true);
   const [error, setError] = useState(false);
-  const { currentUser } = useContext(AuthContext);
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (nombreUsuario.trim() === "") {
-        setUser(null);
-        setError(false);
-        return;
-      }
-      
-      const busqueda = query(
-        collection(baseDatos, "usuarios"),
-        where("displayName", "==", nombreUsuario)
-      );
-
-      try {
-        const querySnapshot = await getDocs(busqueda);
-        if (querySnapshot.size === 0) {
-          setUser(null);
-          setError(true);
-          setMostrarUsuario(true);
-          return;
-        }
-        
-        querySnapshot.forEach((doc) => {
-          setUser(doc.data());
-        });
-        setError(false);
-      } catch (error) {
-        setUser(null);
-        setError(true);
-        setMostrarUsuario(true);
-      }
+    const obtenerUsuarios = async () => {
+      const usuariosSnapshot = await getDocs(collection(baseDatos, "usuarios"));
+      const usuariosData = usuariosSnapshot.docs.map((doc) => doc.data());
+      setUsuarios(usuariosData);
     };
-    fetchUser();
-  }, [nombreUsuario]);
 
-  const handleSelect = async () => {
-    let idCombinado = "";
-    
-    if(currentUser.uid > usuario.uid)
-    {
-      idCombinado = currentUser.uid + usuario.uid;
-    }
-    else
-    {
-      idCombinado = usuario.uid + currentUser.uid;
-    }
+    obtenerUsuarios();
+  }, []);
 
-    try {
-      const datos = await getDoc(doc(baseDatos, "chats", idCombinado))
+  useEffect(() => {
+    const filtrarUsuarios = () => {
+      const usuariosFiltrados = usuarios.filter((usuario) =>
+        usuario.displayName.toLowerCase().startsWith(nombreUsuario.toLowerCase())
+      );
+      setUsuariosFiltrados(usuariosFiltrados);
+    };
 
-      if(!datos.exists()){
-        await setDoc(doc(baseDatos, "chats", idCombinado), {mensajes: [] })
+    filtrarUsuarios();
+  }, [nombreUsuario, usuarios]);
 
-        await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
-          [idCombinado + ".infoUsuario"]: {
-            uid: usuario.uid,
-            displayName: usuario.displayName,
-            photoURL: usuario.photoURL
-          },
-          [idCombinado + ".fecha"]: serverTimestamp()
-        })
-
-        await updateDoc(doc(baseDatos, "chatsUsuarios", usuario.uid), {
-          [idCombinado + ".infoUsuario"]: {
-            uid: currentUser.uid,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL
-          },
-          [idCombinado + ".fecha"]: serverTimestamp()
-        })
-      }
-    }
-    catch(error){
-      setUser(null);
-      setUsername("");
-      setError(true);
-    }
-    
-    setMostrarUsuario(false);
-  }
+  const handleSelect = (usuarioSeleccionado) => {
+    setUsuario(usuarioSeleccionado);
+    setNombreUsuario(usuarioSeleccionado.displayName);
+    setError(false);
+  };
 
   return (
     <div className="buscador">
@@ -98,20 +43,36 @@ const Buscador = () => {
         <input
           type="text"
           placeholder="Buscar usuario..."
-          onChange={(envio) => setUsername(envio.target.value)}
+          onChange={(event) => setNombreUsuario(event.target.value)}
           value={nombreUsuario}
         />
       </div>
-      {error && 
-      <div className="chatusuario">
-        <span>Usuario no encontrado</span>
-      </div>}
-      {usuario && mostrarUsuario && (<div className="chatusuario user" onClick={handleSelect}>
+      {error && (
+        <div className="chatusuario">
+          <span>Usuario no encontrado</span>
+        </div>
+      )}
+      {nombreUsuario &&
+        usuariosFiltrados.map((usuario) => (
+          <div
+            key={usuario.id}
+            className="chatusuario user"
+            onClick={() => handleSelect(usuario)}
+          >
+            <img src={usuario.photoURL} alt="" />
+            <div className="chatinfo">
+              <span>{usuario.displayName}</span>
+            </div>
+          </div>
+        ))}
+      {usuario && mostrarUsuario && (
+        <div className="chatusuario user">
           <img src={usuario.photoURL} alt="" />
           <div className="chatinfo">
             <span>{usuario.displayName}</span>
           </div>
-        </div>)}
+        </div>
+      )}
     </div>
   );
 };

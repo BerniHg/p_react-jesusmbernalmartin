@@ -7,6 +7,7 @@ import { Navigate } from "react-router-dom";
 import "./style.css"
 import {useContext} from "react";
 import { AuthContext } from "./context/AuthContext";
+import Admin from "./pages/Admin";
 
 function App() {
   const { currentUser } = useContext(AuthContext);
@@ -31,6 +32,12 @@ function App() {
         <Route path="ajustes" element={
             <ProtectedRoute>
               <Ajustes />
+            </ProtectedRoute>
+          } />
+
+        <Route path="admin" element={
+            <ProtectedRoute>
+              <Admin />
             </ProtectedRoute>
           } />
         <Route path="login" element={<Login />} />

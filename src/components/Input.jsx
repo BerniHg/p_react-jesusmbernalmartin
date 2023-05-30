@@ -83,9 +83,23 @@ const Input = () => {
     await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
       [data.chatId + ".ultimoMens"]: {
         text,
+        senderId: currentUser.uid,
+        date: Timestamp.now()
       },
       [data.chatId + ".date"]: serverTimestamp(),
     });
+
+    if(data.usuario.uid !== apiChat){
+      await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
+        [data.chatId + ".ultimoMens"]: {
+          text,
+          senderId: currentUser.uid,
+          date: Timestamp.now()
+        },
+        [data.chatId + ".date"]: serverTimestamp(),
+      });
+    }
+    
 
     setText("");
     setImg(null);
@@ -142,6 +156,8 @@ const Input = () => {
     }
   };
 
+  const isSendButtonDisabled = !text && !img;
+
   return (
     <div className="input">
       <input
@@ -166,7 +182,7 @@ const Input = () => {
             </label>
           </>
         ) : null}
-        <button onClick={handleSend} disabled={!text || !img}>
+        <button onClick={handleSend} disabled={isSendButtonDisabled}>
           Enviar
         </button>
       </div>
