@@ -11,6 +11,7 @@
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
     "firebase": "^9.22.0",
+    "googleapis": "^118.0.0",
     "import-io": "^2.0.0",
     "openai": "^3.2.1",
     "react": "^18.2.0",

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { baseDatos } from "../firebase";
 import { format, isToday, isYesterday } from 'date-fns';
 import { AuthContext } from "../context/AuthContext";
@@ -10,7 +10,6 @@ const Chats = () => {
   const { data } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
   const { dispatch } = useContext(ChatContext);
-  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     const getChats = () => {
@@ -24,30 +23,7 @@ const Chats = () => {
       return unsub;
     };
 
-    const fetchConnected = async () => {
-      try {
-        const userDoc = await getDoc(
-          doc(baseDatos, "usuarios", data.usuario.uid)
-        );
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData && userData.connected) {
-            setConnected(userData.connected);
-          }
-        }
-      } catch (error) {
-        console.log("Error al obtener el valor de connected:", error);
-      }
-    };
-
-    const interval = setInterval(fetchConnected, 5000);
-
     currentUser.uid && getChats();
-    fetchConnected();
-
-    return () => {
-      clearInterval(interval);
-    };
   }, [currentUser.uid, data.usuario.uid]);
 
   const handleSelect = (u) => {
@@ -86,13 +62,7 @@ const Chats = () => {
               <img
                 src={chat[1].infoUsuario.photoURL}
                 alt={nombre}
-                className={`chatimagen ${
-                  connected && nombre !== "ChatGPT"
-                    ? "conectado"
-                    : nombre !== "ChatGPT"
-                    ? "desconectado"
-                    : ""
-                }`}
+                className={`chatimagen`}
               />
               <div className="chatinfo">
                 <span>{chat[1].infoUsuario.displayName}</span>

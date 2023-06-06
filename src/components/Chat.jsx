@@ -5,24 +5,20 @@ import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
-import Telefono from "../img/telefono.png";
 import Puntos from "../img/puntos.png";
-import Videollamada from "./Videollamada";
 // import { isDisabled } from "@testing-library/user-event/dist/utils";
 
 const Chat = () => {
   const { data } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
   console.log(data);
-   
+
   //const regexNombreUsuario = /^[a-zA-Z0-9_-]{4,16}$/;
 
   const [isOpen, setIsOpen] = useState(false);
   const [nameClicked, setNameClicked] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [connected, setConnected] = useState(false);
-  const [showVideollamada, setVideollamada] = useState(false);
-  const [callInProgress, setCallInProgress] = useState(false);
 
   const handleButtonClick = () => {
     setIsOpen(!isOpen);
@@ -31,10 +27,6 @@ const Chat = () => {
   const handleNameClicked = () => {
     setIsOpen(!isOpen);
     setNameClicked(!nameClicked);
-  };
-
-  const handleVideollamadaClick = () => {
-    setVideollamada(true);
   };
 
   const eliminarUsuario = async () => {
@@ -58,7 +50,9 @@ const Chat = () => {
   useEffect(() => {
     const fetchConnected = async () => {
       try {
-        const userDoc = await getDoc(doc(baseDatos, "usuarios", data.usuario.uid));
+        const userDoc = await getDoc(
+          doc(baseDatos, "usuarios", data.usuario.uid)
+        );
         if (userDoc.exists()) {
           const userData = userDoc.data();
           const connectedValue = userData.connected || false;
@@ -68,99 +62,71 @@ const Chat = () => {
         console.log("Error al obtener el valor de connected:", error);
       }
     };
-  
+
     fetchConnected();
-  
+
     const interval = setInterval(fetchConnected, 5000);
-  
+
     return () => {
       clearInterval(interval);
     };
   }, [data.usuario.uid]);
-  
 
   return (
-    <>
-      {showVideollamada ? (
-        <Videollamada
-          currentUser={currentUser}
-          contactoUsuario={data.usuario}
-          offeringCall={callInProgress}
-          answeringCall={callInProgress}
-        />
-      ) : (
-        <div
-          className="chat"
-          style={data.chatId === "null" ? { display: "none" } : null}
-        >
-          <div className="chatinfo">
-            <div className="chatusuario">
-              <img
-                className={`chatimagen ${
-                  connected
-                    ? "conectado"
-                    : data.usuario.displayName !== "ChatGPT"
-                    ? "desconectado"
-                    : ""
-                }`}
-                src={data.usuario?.photoURL}
-                alt={data.usuario?.displayName}
-              />
+    <div
+      className="chat"
+      style={data.chatId === "null" ? { display: "none" } : null}
+    >
+      <div className="chatinfo">
+        <div className="chatusuario">
+          <img
+            className={`chatimagen ${
+              connected
+                ? "conectado"
+                : data.usuario.displayName !== "ChatGPT"
+                ? "desconectado"
+                : ""
+            }`}
+            src={data.usuario?.photoURL}
+            alt={data.usuario?.displayName}
+          />
 
-              {!nameClicked ? (
-                <span className="chatnombre" id="usuario_nombre">
-                  {data.usuario?.displayName}
-                </span>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={nuevoNombre}
-                    onChange={(event) => setNuevoNombre(event.target.value)} id="nuevoNombre"
-                  />
-                  <input
-                    type="button"
-                    value="Cambiar"
-                    onClick={cambiarNombre}
-                  />
-                </>
-              )}
-            </div>
-            {data.usuario.displayName !== "ChatGPT" && (
-              <div className="chatopciones">
-                {callInProgress ? (
-                  <p>En proceso de llamada...</p>
-                ) : (
-                  <img
-                    className="llamada"
-                    src={Telefono}
-                    alt=""
-                    onClick={() => {
-                      setCallInProgress(true);
-                      handleVideollamadaClick();
-                    }}
-                  />
-                )}
-                <img
-                  className="ajustes"
-                  src={Puntos}
-                  alt=""
-                  onClick={handleButtonClick}
-                />
-                {isOpen && (
-                  <div className="opcionesmenu">
-                    <p onClick={eliminarUsuario}>Eliminar contacto</p>
-                    <p onClick={handleNameClicked}>Cambiar nombre</p>
-                  </div>
-                )}
+          {!nameClicked ? (
+            <span className="chatnombre" id="usuario_nombre">
+              {data.usuario?.displayName}
+            </span>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={nuevoNombre}
+                onChange={(event) => setNuevoNombre(event.target.value)}
+                id="nuevoNombre"
+              />
+              <input type="button" value="Cambiar" onClick={cambiarNombre} />
+            </>
+          )}
+        </div>
+        {data.usuario.displayName !== "ChatGPT" && (
+          <div className="chatopciones">
+            <img
+              className="ajustes"
+              src={Puntos}
+              alt=""
+              onClick={handleButtonClick}
+            />
+            {isOpen && (
+              <div className="opcionesmenu">
+                <p onClick={eliminarUsuario}>Eliminar contacto</p>
+                <p onClick={handleNameClicked}>Cambiar nombre</p>
               </div>
             )}
           </div>
-          <Mensajes />
-          <Input />
-        </div>
-      )}
-    </>
+        )}
+      </div>
+      <Mensajes />
+      <Input />
+    </div>
   );
 };
 

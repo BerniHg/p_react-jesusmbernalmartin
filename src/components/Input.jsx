@@ -15,31 +15,25 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const Input = () => {
   const [text, setText] = useState("");
-  const [img, setImg] = useState(null);
+  const [file, setFile] = useState(null);
 
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
 
   const apiChat = "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";
-  const apiURL = "https://api.openai.com/v1/chat/completions";
 
   const handleKey = (envio) => {
     envio.code === "Enter" && handleSend();
   };
 
   const handleSend = async () => {
-    console.log("Antes de verificar el contenido");
-    if (!text && !img) {
-      console.log("No hay texto ni imagen");
+    if (!text && !file) {
       return;
     }
 
-    console.log("Después de verificar el contenido");
-
-    if (img) {
-      console.log("Subiendo imagen al almacenamiento");
-      const storageRef = ref(storage, uuid());
-      const uploadTask = uploadBytesResumable(storageRef, img);
+    if (file) {
+      const storageRef = ref(storage, `${uuid()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
       await new Promise((resolve, reject) => {
         uploadTask.on(
@@ -54,20 +48,24 @@ const Input = () => {
 
       const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-      console.log("URL de descarga de la imagen:", downloadURL);
+      const mensajeData = {
+        id: uuid(),
+        senderId: currentUser.uid,
+        date: Timestamp.now(),
+      };
+
+      if (file.type.startsWith("image/")) {
+        mensajeData.img = downloadURL;
+        mensajeData.fileName = file.name;
+      } else {
+        mensajeData.file = downloadURL;
+        mensajeData.fileName = file.name;
+      }
 
       await updateDoc(doc(baseDatos, "chats", data.chatId), {
-        mensajes: arrayUnion({
-          id: uuid(),
-          text,
-          senderId: currentUser.uid,
-          date: Timestamp.now(),
-          img: downloadURL,
-        }),
+        mensajes: arrayUnion(mensajeData),
       });
     } else {
-      console.log("No hay imagen, actualizando mensajes en Firestore");
-
       await updateDoc(doc(baseDatos, "chats", data.chatId), {
         mensajes: arrayUnion({
           id: uuid(),
@@ -78,85 +76,29 @@ const Input = () => {
       });
     }
 
-    console.log("Actualizando información del usuario en Firestore");
-
     await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
       [data.chatId + ".ultimoMens"]: {
-        text,
+        text: text,
         senderId: currentUser.uid,
-        date: Timestamp.now()
+        date: Timestamp.now(),
       },
       [data.chatId + ".date"]: serverTimestamp(),
     });
 
-    if(data.usuario.uid !== apiChat){
-      await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
-        [data.chatId + ".ultimoMens"]: {
-          text,
-          senderId: currentUser.uid,
-          date: Timestamp.now()
-        },
-        [data.chatId + ".date"]: serverTimestamp(),
-      });
-    }
-    
+    await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
+      [data.chatId + ".ultimoMens"]: {
+        text: text,
+        senderId: currentUser.uid,
+        date: Timestamp.now(),
+      },
+      [data.chatId + ".date"]: serverTimestamp(),
+    });
 
     setText("");
-    setImg(null);
-
-    console.log("Valor de data.usuario?.uid:", data.usuario?.uid);
-    console.log("Valor de apiChat:", apiChat);
-
-    if (data.usuario?.uid === apiChat) {
-      console.log("Enviando solicitud a ChatGPT");
-      try {
-        const response = await fetch(apiURL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiChat}`,
-          },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: "You are a helpful assistant." },
-              { role: "user", content: text },
-            ],
-          }),
-        });
-
-        if (response.ok) {
-          const responseData = await response.json();
-          const message = responseData.choices[0].message.content.trim();
-
-          console.log("Respuesta de ChatGPT:", responseData);
-
-          console.log("Mensaje de ChatGPT:", message);
-
-          await updateDoc(doc(baseDatos, "chats", data.chatId), {
-            mensajes: arrayUnion({
-              id: uuid(),
-              text: message,
-              senderId: apiChat,
-              date: Timestamp.now(),
-            }),
-          });
-
-          await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
-            [data.chatId + ".ultimoMens"]: {
-              text: message,
-            },
-            [data.chatId + ".date"]: serverTimestamp(),
-          });
-        } else {
-          console.error("Error al enviar la solicitud a ChatGPT");
-        }
-      } catch (error) {
-        console.error("Error al enviar la solicitud a ChatGPT:", error);
-      }
-    }
+    setFile(null);
   };
 
-  const isSendButtonDisabled = !text && !img;
+  const isSendButtonDisabled = !text && !file;
 
   return (
     <div className="input">
@@ -175,8 +117,10 @@ const Input = () => {
               type="file"
               style={{ display: "none" }}
               id="archivo"
-              onChange={(contenido) => setImg(contenido.target.files[0])}
+              accept="*"
+              onChange={(contenido) => setFile(contenido.target.files[0])}
             />
+
             <label htmlFor="archivo">
               <img src={Annadir} alt="" />
             </label>

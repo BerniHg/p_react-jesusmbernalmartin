@@ -28,7 +28,7 @@ const Barranav = () => {
         <span>{currentUser.displayName}</span>
       </div>
       <div className="botones_opciones">
-        <button onClick={handleSignOut}>Cerrar sesión</button>
+        <button onClick={handleSignOut} className="logout">Cerrar sesión</button>
         <Link to="/ajustes">
           <img src={imgAjustes} alt="" />
         </Link>

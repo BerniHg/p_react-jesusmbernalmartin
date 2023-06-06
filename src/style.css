@@ -56,7 +56,7 @@ button {
 }
 
 .formWrapper button {
-  background-color: #d68e5a;
+  background-color: #ed995d;
   color: white;
   padding: 10px;
   font-weight: bold;
@@ -64,6 +64,11 @@ button {
   border-radius: 10px;
   cursor: pointer;
 }
+
+.formWrapper button:hover {
+  background-color: #d68e5a;
+}
+
 
 .input-password-container {
   display: flex;
@@ -77,14 +82,8 @@ button {
 
 #togglePassword {
   padding: 8px 12px;
-  background-color: #ed995d;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
-}
-
-#togglePassword:hover {
-  background-color: #d68e5a;
 }
 
 .formWrapper div.fotoContainer {
@@ -191,6 +190,10 @@ button {
   text-align: center;
   border: none;
   cursor: pointer;
+}
+
+.menu button.logout {
+  border-radius: 10px;
 }
 
 .menu button:hover {
@@ -369,7 +372,7 @@ button {
 .opcionesmenu {
   position: absolute;
   top: 40px;
-  left: -30px;
+  left: -60px;
   background-color: white;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
   border-radius: 5px;
@@ -432,7 +435,7 @@ button {
 }
 
 .mensaje .contenidomensaje {
-  max-width: 50%;
+  max-width: 30%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -447,7 +450,11 @@ button {
 }
 
 .mensaje .contenidomensaje img {
-  width: 200px;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 .mensaje.duenno {
@@ -459,7 +466,7 @@ button {
 }
 
 .mensaje.duenno .contenidomensaje p {
-  background-color: #b0652d;
+  background-color: #d68e5a;
   color: white;
   border-radius: 10px 0px 10px 10px;
 }
@@ -519,6 +526,35 @@ button {
   cursor: pointer;
 }
 
+.carrusel {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+}
+
+.carrusel-item {
+  position: relative;
+  scroll-snap-align: start;
+  margin-right: 10px;
+}
+
+.carrusel-item img {
+  width: 150px;
+  height: 150px;
+}
+
+.eliminar-imagen {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 button.boton-mostrar-barra {
   height: 100%;
   border: none;
@@ -542,81 +578,98 @@ button.boton-mostrar-barra img {
   transform: translateY(-50%);
 }
 
-.ajustes {
+.imagen-ampliada {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.imagen-ampliada img {
+  max-width: 80%;
+  max-height: 80%;
+}
+
+.imagen-ampliada button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.ajustes {
+  max-width: 600px;
+  margin: 0 auto;
   padding: 20px;
 }
 
 .ajustes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ajustes-header a {
-  color: #d68e5a;
-  text-decoration: none;
+  margin-bottom: 20px;
 }
 
 .ajustes h2 {
-  color: #d68e5a;
-}
-
-.ajustes form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .ajustes-section {
-  grid-column: span 2;
+  margin-bottom: 20px;
 }
 
-.ajustes label {
-  color: #d68e5a;
+.ajustes-section label {
+  display: block;
+  margin-bottom: 5px;
 }
 
-.ajustes input[type="file"] {
-  padding: 10px;
-}
-
-.ajustes img {
-  width: 90px;
-  height: 90px;
-  border: 2px solid #b0652d;
-  border-radius: 50%;
-  object-fit: cover;
-  cursor: pointer;
-}
-
-.ajustes input[type="text"],
-.ajustes input[type="password"],
-.ajustes textarea {
-  padding: 10px;
-  border: 1px solid #ffc082;
+.ajustes-section input[type="text"],
+.ajustes-section input[type="password"],
+.ajustes-section input[type="file"] {
   width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-.ajustes .submit-btn {
-  grid-column: span 2;
-  background-color: #d68e5a;
-  color: white;
-  padding: 10px;
-  font-weight: bold;
+.ajustes-section img {
+  max-width: 200px;
+  margin-bottom: 10px;
+}
+
+.submit-btn {
+  padding: 10px 20px;
+  background-color: #337ab7;
+  color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.ajustes h2:last-child {
-  color: #d68e5a;
+.submit-btn:hover {
+  background-color: #286090;
 }
 
-.ajustes label input[type="checkbox"] {
-  margin-right: 5px;
+.ajustes-section button {
+  padding: 10px 20px;
+  background-color: #d9534f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
+
+.ajustes-section button:hover {
+  background-color: #c9302c;
+}
+
 
 .admin-container {
   display: flex;

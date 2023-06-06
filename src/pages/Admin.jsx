@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import UsuariosOrg from "../components/UsuariosOrg";
 import UsuariosCrear from "../components/UsuariosCrear";
+import Analisis from "../components/Analisis";
 import { AuthContext } from "../context/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { baseDatos } from "../firebase";
@@ -62,10 +63,17 @@ const Admin = () => {
       >
         Crear usuarios
       </button>
+      <button
+        onClick={() => handleClick("analisis")}
+        disabled={seleccionado === "analisis"}
+      >
+        Análisis
+      </button>
       </div>
       <div className="admin-content">
       {seleccionado === "usuariosOrg" && <UsuariosOrg />}
-      {seleccionado === "usuariosCrear" && <UsuariosCrear />} 
+      {seleccionado === "usuariosCrear" && <UsuariosCrear />}
+      {seleccionado === "analisis" && <Analisis />} 
       </div>
       
     </div>

@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app"
+import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth"
 import { getStorage } from "firebase/storage"
 import { getFirestore } from "firebase/firestore";
@@ -9,10 +10,12 @@ const firebaseConfig = {
   projectId: "orange-chat-14be2",
   storageBucket: "orange-chat-14be2.appspot.com",
   messagingSenderId: "554730845026",
-  appId: "1:554730845026:web:54537ef4e5e0fd1891f23b"
+  appId: "1:554730845026:web:54537ef4e5e0fd1891f23b",
+  measurementId: "G-CK31LGM0HY"
 };
 
 export const app = initializeApp(firebaseConfig)
+export const analytics = getAnalytics(app);
 export const auth = getAuth()
 export const storage = getStorage()
 export const baseDatos = getFirestore(app);

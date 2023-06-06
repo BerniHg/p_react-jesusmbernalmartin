@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import Foto from "../img/annadirFoto.png";
 import UsuarioFoto from "../img/usuario.jpg";
 import PaginaCarga from "../components/PaginaCarga";
@@ -14,8 +14,8 @@ import {
   getDoc,
   collection,
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const regexNombreCompleto =
   /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+){0,3}$/;
@@ -32,22 +32,32 @@ const UsuariosCrear = () => {
   const [mostrarPaginaCarga, setMostrarPaginaCarga] = useState(false);
   const [rolUsuario, setRolUsuario] = useState("");
 
-  const obtenerRolUsuario = async (uid) => {
+  const obtenerRolUsuario = useCallback(async () => {
     try {
-      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDocRef = doc(baseDatos, "usuarios", currentUser.uid);
       const usuarioDocSnap = await getDoc(usuarioDocRef);
       if (usuarioDocSnap.exists()) {
         const usuarioData = usuarioDocSnap.data();
         const userRole = usuarioData.role;
-        console.log(userRole);
-        setRolUsuario(userRole);
+        return userRole;
       }
     } catch (error) {
       console.log(error);
     }
-  };
+  }, [currentUser.uid]);
 
-  console.log(obtenerRolUsuario)
+  useEffect(() => {
+    const obtenerRol = async () => {
+      try {
+        const userRole = await obtenerRolUsuario();
+        setRolUsuario(userRole);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    obtenerRol();
+  }, [obtenerRolUsuario]);
 
   const handleSeleccionarFoto = (event) => {
     let foto = event.target.files[0];
@@ -60,13 +70,14 @@ const UsuariosCrear = () => {
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (valores) => {
-    valores.preventDefault();
-    const rol = valores.target[0].value;
-    const nombre_completo = valores.target[1].value;
-    const nombre_usuario = valores.target[2].value;
-    const correo = valores.target[3].value;
-    const contrasenna = valores.target[4].value;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formulario = event.target;
+    const rol = formulario.rol.value;
+    const nombre_completo = formulario.nombre_completo.value;
+    const nombre_usuario = formulario.nombre_usuario.value;
+    const correo = formulario.email.value;
+    const contrasenna = formulario.password.value;
     const foto = fotoSeleccionada || UsuarioFoto;
 
     const errors = {};
@@ -110,7 +121,10 @@ const UsuariosCrear = () => {
 
     if (Object.keys(errors).length === 0) {
       try {
-        const storageRef = ref(storage, nombre_completo);
+        setMostrarPaginaCarga(true);
+
+        const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
+        const storageRef = ref(storage, datos.user.uid);
         const uploadTask = uploadBytesResumable(storageRef, foto);
 
         uploadTask.on(
@@ -121,13 +135,6 @@ const UsuariosCrear = () => {
           },
           async () => {
             try {
-              setMostrarPaginaCarga(true);
-
-              const datos = await createUserWithEmailAndPassword(
-                auth,
-                correo,
-                contrasenna
-              );
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
               await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
@@ -147,7 +154,7 @@ const UsuariosCrear = () => {
                 photoURL: downloadURL,
               });
 
-              navigate("/login");
+              navigate("/admin");
             } catch (error) {
               console.log(error);
               setError(true);
@@ -182,7 +189,7 @@ const UsuariosCrear = () => {
     return () => {
       togglePasswordButton.removeEventListener("click", handleTogglePassword);
     };
-  }, [currentUser]);
+  }, []);
 
   return (
     <div className="formContainer">
@@ -192,13 +199,11 @@ const UsuariosCrear = () => {
         <div className="formWrapper">
           <form onSubmit={handleSubmit}>
             <select name="rol" id="rol">
-              {rolUsuario === "chief" && (
-                <option value="chief">Jefe</option>
-              )}
+              {rolUsuario === "chief" && <option value="chief">Jefe</option>}
               {(rolUsuario === "chief" || rolUsuario === "admin") && (
                 <option value="admin">Admin</option>
               )}
-              <option value="user" selected>
+              <option value="user" defaultValue>
                 Usuario
               </option>
             </select>
@@ -246,8 +251,8 @@ const UsuariosCrear = () => {
                     width: "90px",
                     height: "90px",
                     border: "2px solid #b0652d",
-                    "border-radius": "50%",
-                    "object-fit": "cover",
+                    borderRadius: "50%",
+                    objectFit: "cover",
                   }}
                 />
                 <button
