@@ -16,6 +16,12 @@ button {
     sans-serif;
 }
 
+.dark-mode {
+  /* Estilos para el modo oscuro */
+  background-color: #222222;
+  color: #ffffff;
+}
+
 .formContainer {
   background-color: #ffc082;
   height: 100vh;
@@ -198,6 +204,11 @@ button {
 
 .menu button:hover {
   background-color: #d68e5a;
+}
+
+.imagen-ampliada button.cerrar:hover {
+  background: none;
+  font-size: 26px;
 }
 
 .botones_opciones {
@@ -608,66 +619,140 @@ button.boton-mostrar-barra img {
 }
 
 .ajustes {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 30px;
 }
 
-.ajustes-header {
-  margin-bottom: 20px;
+.ajustes .ajustes-header {
+  margin-bottom: 30px;
+}
+
+.ajustes .ajustes-header a {
+  color: #333;
+  text-decoration: none;
 }
 
 .ajustes h2 {
-  margin-bottom: 10px;
-}
-
-.ajustes-section {
+  color: #333;
   margin-bottom: 20px;
 }
 
-.ajustes-section label {
-  display: block;
-  margin-bottom: 5px;
+.ajustes form {
+  margin-bottom: 30px;
 }
 
-.ajustes-section input[type="text"],
-.ajustes-section input[type="password"],
-.ajustes-section input[type="file"] {
-  width: 100%;
+.ajustes label {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.ajustes input[type="text"],
+.ajustes input[type="password"],
+.ajustes input[type="file"] {
   padding: 10px;
+  width: 100%;
   border: 1px solid #ccc;
   border-radius: 4px;
+  margin-bottom: 20px;
 }
 
-.ajustes-section img {
-  max-width: 200px;
+.ajustes .submit-btn,
+.ajustes .edit-btn,
+.ajustes .cancel-btn {
+  padding: 10px 20px;
+  margin-top: 10px;
+  margin-right: 10px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ajustes .submit-btn:hover,
+.ajustes .edit-btn:hover,
+.ajustes .cancel-btn:hover {
+  background-color: #555;
+}
+
+.ajustes .edit-btn {
+  background-color: #f90;
+}
+
+.ajustes .edit-btn:hover {
+  background-color: #e85c00;
+}
+
+.ajustes .edit-btn[disabled],
+.ajustes .cancel-btn[disabled] {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.ajustes .edit-btn[disabled]:hover,
+.ajustes .cancel-btn[disabled]:hover {
+  background-color: #ccc;
+}
+
+.ajustes img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
   margin-bottom: 10px;
 }
 
-.submit-btn {
-  padding: 10px 20px;
-  background-color: #337ab7;
-  color: #fff;
+.ajustes hr {
+  margin: 30px 0;
   border: none;
+  border-top: 1px solid #ccc;
+}
+
+.ajustes label input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.ajustes .ajustes-section .form-group {
+  margin-bottom: 20px;
+}
+
+.ajustes .ajustes-section .form-group label {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.ajustes .ajustes-section .password-input {
+  position: relative;
+}
+
+.ajustes .ajustes-section .password-input input {
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #ccc;
   border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.ajustes .ajustes-section .password-input button {
+  position: absolute;
+  right: -10px;
+  top: 40%;
+  transform: translateY(-50%);
+  padding: 5px 10px;
+  background-color: transparent;
+  border: none;
+  color: #333;
   cursor: pointer;
 }
 
-.submit-btn:hover {
-  background-color: #286090;
+.ajustes .ajustes-section .password-input button:hover {
+  color: #555;
 }
 
-.ajustes-section button {
-  padding: 10px 20px;
-  background-color: #d9534f;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.ajustes-section button:hover {
-  background-color: #c9302c;
+.error-message {
+  color: red;
+  margin-top: 5px;
 }
 
 

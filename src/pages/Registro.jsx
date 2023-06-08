@@ -11,6 +11,8 @@ import {
   where, query, getDocs, collection
 } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
+import md5 from "md5";
+
 
 const regexNombreCompleto =
   /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+){0,3}$/;
@@ -82,7 +84,7 @@ const Registro = () => {
   
     if (Object.keys(errors).length === 0) {
       try {
-        const storageRef = ref(storage, nombre_completo);
+        const storageRef = ref(storage, `fotosPerfil/${nombre_completo}`);
         const uploadTask = uploadBytesResumable(storageRef, foto);
   
         uploadTask.on(
@@ -95,7 +97,7 @@ const Registro = () => {
             try {
               setMostrarPaginaCarga(true);
   
-              const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
+              const datos = await createUserWithEmailAndPassword(auth, correo, md5(contrasenna));
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
   
               await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
@@ -105,7 +107,9 @@ const Registro = () => {
                 email: correo,
                 photoURL: downloadURL,
                 connected: false,
-                role: "user"
+                role: "user",
+                dark: false,
+                password: md5(contrasenna)
               });
   
               await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});

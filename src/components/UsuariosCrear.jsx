@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import Foto from "../img/annadirFoto.png";
 import UsuarioFoto from "../img/usuario.jpg";
 import PaginaCarga from "../components/PaginaCarga";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword } from "firebase/auth";
 import { auth, baseDatos, storage } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {
@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import md5 from "md5";
 
 const regexNombreCompleto =
   /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+){0,3}$/;
@@ -31,6 +32,22 @@ const UsuariosCrear = () => {
   const [errors, setErrors] = useState({});
   const [mostrarPaginaCarga, setMostrarPaginaCarga] = useState(false);
   const [rolUsuario, setRolUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const obtenerDatos = async (uid) => {
+      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+        const usuarioDocSnap = await getDoc(usuarioDocRef);
+        if (usuarioDocSnap.exists()) {
+          const usuarioData = usuarioDocSnap.data();
+          setPassword(usuarioData.password)
+          setEmail(usuarioData.email); 
+        }
+    }
+    
+    obtenerDatos(currentUser.uid);
+  }, [currentUser.uid]);
 
   const obtenerRolUsuario = useCallback(async () => {
     try {
@@ -123,8 +140,8 @@ const UsuariosCrear = () => {
       try {
         setMostrarPaginaCarga(true);
 
-        const datos = await createUserWithEmailAndPassword(auth, correo, contrasenna);
-        const storageRef = ref(storage, datos.user.uid);
+        const datos = await createUserWithEmailAndPassword(auth, correo, md5(contrasenna));
+        const storageRef = ref(storage, `fotosPerfil/${nombre_completo}`);
         const uploadTask = uploadBytesResumable(storageRef, foto);
 
         uploadTask.on(
@@ -135,6 +152,7 @@ const UsuariosCrear = () => {
           },
           async () => {
             try {
+              
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
               await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
@@ -145,6 +163,7 @@ const UsuariosCrear = () => {
                 photoURL: downloadURL,
                 connected: false,
                 role: rol,
+                password: contrasenna
               });
 
               await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
@@ -155,6 +174,8 @@ const UsuariosCrear = () => {
               });
 
               navigate("/admin");
+              await signInWithEmailAndPassword(auth, email, password);
+              window.location.reload();
             } catch (error) {
               console.log(error);
               setError(true);

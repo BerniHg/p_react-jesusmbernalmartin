@@ -1,24 +1,22 @@
 import { baseDatos } from "../firebase";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import Mensajes from "./Mensajes";
 import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import Puntos from "../img/puntos.png";
-// import { isDisabled } from "@testing-library/user-event/dist/utils";
 
 const Chat = () => {
   const { data } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
   console.log(data);
 
-  //const regexNombreUsuario = /^[a-zA-Z0-9_-]{4,16}$/;
-
   const [isOpen, setIsOpen] = useState(false);
   const [nameClicked, setNameClicked] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [connected, setConnected] = useState(false);
+  const opcionesRef = useRef(null); // Referencia al elemento de las opciones
 
   const handleButtonClick = () => {
     setIsOpen(!isOpen);
@@ -43,11 +41,11 @@ const Chat = () => {
     });
 
     setNameClicked(!nameClicked);
-
-    document.getElementById("usuario_nombre").innerHTML = nuevoNombre;
+    setNuevoNombre(nuevoNombre);
   };
 
   useEffect(() => {
+    setNuevoNombre(data.usuario.displayName);
     const fetchConnected = async () => {
       try {
         const userDoc = await getDoc(
@@ -65,12 +63,21 @@ const Chat = () => {
 
     fetchConnected();
 
+    const handleClickOutside = (event) => {
+      if (opcionesRef.current && !opcionesRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
     const interval = setInterval(fetchConnected, 5000);
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, [data.usuario.uid]);
+  }, [currentUser.displayName, data.usuario?.displayName, data.usuario.uid]);
 
   return (
     <div
@@ -93,7 +100,7 @@ const Chat = () => {
 
           {!nameClicked ? (
             <span className="chatnombre" id="usuario_nombre">
-              {data.usuario?.displayName}
+              {nuevoNombre}
             </span>
           ) : (
             <>
@@ -108,7 +115,7 @@ const Chat = () => {
           )}
         </div>
         {data.usuario.displayName !== "ChatGPT" && (
-          <div className="chatopciones">
+          <div className="chatopciones" ref={opcionesRef}>
             <img
               className="ajustes"
               src={Puntos}

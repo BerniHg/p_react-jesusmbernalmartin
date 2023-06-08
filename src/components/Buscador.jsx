@@ -77,6 +77,7 @@ const Buscador = () => {
     }
 
     setMostrarUsuario(false);
+    setNombreUsuario("");
   };
 
   return (

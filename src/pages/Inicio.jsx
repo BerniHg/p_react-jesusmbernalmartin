@@ -3,6 +3,7 @@ import PaginaCarga from "../components/PaginaCarga";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import md5 from "md5";
 
 const Login = () => {
   const [error, setError] = useState(false);
@@ -17,7 +18,7 @@ const Login = () => {
 
     try {
       setMostrarPaginaCarga(true);
-      await signInWithEmailAndPassword(auth, correo, contrasenna);
+      await signInWithEmailAndPassword(auth, correo, md5(contrasenna));
       navigate("/");
     } catch (error) {
       setError(true);

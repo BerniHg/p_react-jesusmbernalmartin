@@ -6,10 +6,13 @@ import {
   doc,
   updateDoc,
   getDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { baseDatos } from "../firebase";
 import PaginaCarga from "../components/PaginaCarga";
 import { AuthContext } from "../context/AuthContext";
+import { getAuth, deleteUser } from "firebase/auth";
 
 const UsuariosOrg = () => {
   const { currentUser } = useContext(AuthContext);
@@ -82,11 +85,58 @@ const UsuariosOrg = () => {
     }
   };
 
+  const inhabilitarUsuario = async (uid) => {};
+
   const eliminarUsuario = async (uid) => {
     try {
-      await deleteDoc(doc(baseDatos, "usuarios", uid));
+      // Obtener la información del usuario
+      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDoc = await getDoc(usuarioDocRef);
+      const usuarioData = usuarioDoc.data();
+
+      // Verificar si el usuario tiene un correo electrónico
+      if (usuarioData.email) {
+        // Eliminar el correo electrónico de autenticación del usuario
+        const auth = getAuth();
+        await deleteUser(auth, usuarioData.email);
+        console.log(
+          "Correo electrónico de autenticación eliminado correctamente."
+        );
+      }
+
+      // Obtener la lista de usuarios que hacen referencia al usuario que se eliminará
+      const usuariosSnapshot = await getDocs(
+        query(collection(baseDatos, "chatsUsuarios"), where(uid, "==", true))
+      );
+      const usuariosReferencia = usuariosSnapshot.docs.map((doc) => doc.id);
+
+      // Actualizar el displayName de los usuarios correspondientes
+      await Promise.all(
+        usuariosReferencia.map(async (usuarioId) => {
+          const usuarioDocRef = doc(baseDatos, "chatsUsuarios", usuarioId);
+          const usuarioDoc = await getDoc(usuarioDocRef);
+          const usuarioData = usuarioDoc.data();
+
+          // Verificar y actualizar el displayName y photoURL si es necesario
+          if (usuarioData.infoUsuario) {
+            await updateDoc(usuarioDocRef, {
+              "infoUsuario.displayName":
+                usuarioData.infoUsuario.displayName || "Usuario No Encontrado",
+              "infoUsuario.photoURL":
+                usuarioData.infoUsuario.photoURL ||
+                "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/usuario.jpg?alt=media&token=1087dfaa-96a5-440c-827e-8e88271d5367&_gl=1*1ad0zim*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjA3MjgwMS42Mi4xLjE2ODYwNzQ2MzAuMC4wLjA.",
+            });
+          }
+        })
+      );
+
+      // Eliminar el usuario de las colecciones correspondientes
+      await deleteDoc(usuarioDocRef);
       await deleteDoc(doc(baseDatos, "chatsUsuarios", uid));
+
       console.log("Usuario eliminado correctamente.");
+
+      window.location.reload();
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
     }
@@ -99,6 +149,16 @@ const UsuariosOrg = () => {
 
     if (confirmacion) {
       eliminarUsuario(uid);
+    }
+  };
+
+  const confirmarInhabilitarUsuario = (uid) => {
+    const confirmacion = window.confirm(
+      "¿Estás seguro de que quieres inhabilitar a este usuario?"
+    );
+
+    if (confirmacion) {
+      inhabilitarUsuario(uid);
     }
   };
 
@@ -163,7 +223,7 @@ const UsuariosOrg = () => {
     if (valorA > valorB) return ordenAscendente ? 1 : -1;
     return 0;
   });
-  
+
   const totalPaginas = Math.ceil(usuariosOrdenados.length / usuariosPorPagina);
 
   // Actualizar la lista de usuarios a mostrar cuando se cambie la página actual o la cantidad de usuarios por página
@@ -384,6 +444,13 @@ const UsuariosOrg = () => {
                     <td className="botones">
                       <button onClick={() => toggleEdicionUsuario(usuario.uid)}>
                         Editar
+                      </button>
+                      <button
+                        onClick={() =>
+                          confirmarInhabilitarUsuario(usuario.email)
+                        }
+                      >
+                        Inhabilitar
                       </button>
                       <button
                         onClick={() => confirmarEliminarUsuario(usuario.uid)}

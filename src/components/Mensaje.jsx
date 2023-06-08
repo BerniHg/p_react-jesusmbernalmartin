@@ -99,7 +99,7 @@ const Mensaje = ({ mensaje }) => {
       {imagenAmpliada && (
         <div className="imagen-ampliada">
           <img src={imagenAmpliada} alt="Imagen ampliada" />
-          <button onClick={() => setImagenAmpliada(null)}>Cerrar</button>
+          <button onClick={() => setImagenAmpliada(null)} className="cerrar">Cerrar</button>
         </div>
       )}
     </div>
