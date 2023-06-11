@@ -23,22 +23,33 @@ const Buscador = () => {
 
   useEffect(() => {
     const filtrarUsuarios = () => {
-      const usuariosFiltrados = usuarios.filter((usuario) =>
-        usuario.displayName.toLowerCase().startsWith(nombreUsuario.toLowerCase())
-      );
+      const usuariosFiltrados = usuarios.filter((usuario) => {
+        const nombreUsuarioActual = usuario.displayName.toLowerCase();
+        const nombreUsuarioFiltrar = nombreUsuario.toLowerCase();
+        return (
+          nombreUsuarioActual !== currentUser.displayName &&
+          nombreUsuarioActual !== "usuario no encontrado" &&
+          nombreUsuarioActual.startsWith(nombreUsuarioFiltrar)
+        );
+      });
+    
       setUsuariosFiltrados(usuariosFiltrados);
       setMostrarUsuario(false);
       setError(false);
-
+    
       if (nombreUsuario.trim() !== "" && usuariosFiltrados.length === 0) {
         setError(true);
       }
-    };
+    };    
 
     filtrarUsuarios();
-  }, [nombreUsuario, usuarios]);
+  }, [currentUser.displayName, nombreUsuario, usuarios]);
 
   const handleSelect = async (usuarioSeleccionado) => {
+    if (usuarioSeleccionado.displayName === currentUser.displayName || usuarioSeleccionado.displayName === "Usuario No Encontrado") {
+      return;
+    }
+    
     let idCombinado = "";
 
     if (currentUser.uid > usuarioSeleccionado.uid) {
@@ -52,12 +63,14 @@ const Buscador = () => {
 
       if (!datos.exists()) {
         await setDoc(doc(baseDatos, "chats", idCombinado), { mensajes: [] });
+        
 
         await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
           [idCombinado + ".infoUsuario"]: {
             uid: usuarioSeleccionado.uid,
             displayName: usuarioSeleccionado.displayName,
             photoURL: usuarioSeleccionado.photoURL,
+            nickName: ""
           },
           [idCombinado + ".fecha"]: serverTimestamp(),
         });
@@ -67,6 +80,18 @@ const Buscador = () => {
             uid: currentUser.uid,
             displayName: currentUser.displayName,
             photoURL: currentUser.photoURL,
+            nickName: ""
+          },
+          [idCombinado + ".fecha"]: serverTimestamp(),
+        });
+      }
+      else{
+        await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
+          [idCombinado + ".infoUsuario"]: {
+            uid: usuarioSeleccionado.uid,
+            displayName: usuarioSeleccionado.displayName,
+            photoURL: usuarioSeleccionado.photoURL,
+            nickName: ""
           },
           [idCombinado + ".fecha"]: serverTimestamp(),
         });

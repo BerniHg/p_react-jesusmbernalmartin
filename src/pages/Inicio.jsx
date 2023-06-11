@@ -2,31 +2,52 @@ import React, { useState, useEffect } from "react";
 import PaginaCarga from "../components/PaginaCarga";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, baseDatos } from "../firebase";
+import {
+  where,
+  query,
+  getDocs,
+  collection,
+} from "firebase/firestore";
 import md5 from "md5";
 
 const Login = () => {
   const [error, setError] = useState(false);
+  const [disable, setDisable] = useState(false);
   const [mostrarPaginaCarga, setMostrarPaginaCarga] = useState(false);
   const [mostrarContrasenna, setMostrarContrasenna] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setDisable(false);
+    setError(false);
+    setMostrarContrasenna(false);
     const correo = event.target[0].value;
     const contrasenna = event.target[1].value;
-
+  
     try {
       setMostrarPaginaCarga(true);
-      await signInWithEmailAndPassword(auth, correo, md5(contrasenna));
-      navigate("/");
+      const usuariosSnapshot = await getDocs(
+        query(collection(baseDatos, "usuarios"), where("email", "==", correo))
+      );
+  
+      const enableValues = usuariosSnapshot.docs.map((doc) => doc.data().enable);
+      const enable = enableValues.includes(true);
+      
+      if (!enable) {
+        setDisable(true);
+      } else {
+        await signInWithEmailAndPassword(auth, correo, md5(contrasenna));
+        navigate("/");
+      }
     } catch (error) {
       setError(true);
     } finally {
       setMostrarPaginaCarga(false);
     }
   };
-
+  
   const handleTogglePassword = () => {
     setMostrarContrasenna(!mostrarContrasenna);
   };
@@ -57,7 +78,10 @@ const Login = () => {
               </button>
             </div>
             {error && (
-              <span className="error">Correo o contraseña incorrectos.</span>
+              <span className="error">Correo o contraseña inválidos.</span>
+            )}
+            {disable && (
+              <span className="error">Correo o contraseña inválidos.</span>
             )}
             <button type="submit">Iniciar sesión</button>
           </form>

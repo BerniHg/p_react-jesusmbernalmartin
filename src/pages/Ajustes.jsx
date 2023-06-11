@@ -3,13 +3,13 @@ import { AuthContext } from "../context/AuthContext";
 import {
   signOut,
   updatePassword,
-  getAuth,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  deleteUser,
 } from "firebase/auth";
 import { Link } from "react-router-dom";
-import { updateDoc, doc, deleteDoc, getDoc } from "firebase/firestore";
-import { baseDatos, storage } from "../firebase";
+import { updateDoc, doc, getDoc } from "firebase/firestore";
+import { baseDatos, storage, auth } from "../firebase";
 import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import md5 from "md5";
 
@@ -22,7 +22,7 @@ const Ajustes = () => {
 
   const { currentUser } = useContext(AuthContext);
   const [nombreCompleto, setNuevoNombreCompleto] = useState("");
-  const [imagen, setNuevaFoto] = useState(null);
+  const [imagen, setNuevaFoto] = useState({ file: null, localURL: "" });
   const [nombre, setNuevoNombre] = useState("");
   const [contr, setNuevaContr] = useState("");
   const [contrasenna, setNuevaContrasena] = useState("");
@@ -44,8 +44,6 @@ const Ajustes = () => {
   const [mostrarContrasenna2, setMostrarContrasenna2] = useState(false);
   const [contrExito, setContrExito] = useState(false);
 
-  const auth = getAuth();
-
   const reauthenticate = async (password) => {
     try {
       const user = auth.currentUser;
@@ -65,7 +63,10 @@ const Ajustes = () => {
       if (usuarioDocSnap.exists()) {
         const usuarioData = usuarioDocSnap.data();
         setNuevoNombre(usuarioData.displayName);
-        setNuevaFoto(usuarioData.photoURL);
+        setNuevaFoto((prev) => ({
+          ...prev,
+          localURL: usuarioData.photoURL,
+        }));
         setNuevoNombreCompleto(usuarioData.fullName);
         setDarkMode(usuarioData.dark);
       }
@@ -80,7 +81,12 @@ const Ajustes = () => {
 
   const handleChangeFoto = (event) => {
     const selectedFile = event.target.files[0];
-    setNuevaFoto(URL.createObjectURL(selectedFile));
+    console.log("selectedFile", selectedFile);
+    setNuevaFoto({
+      file: selectedFile,
+      localURL: URL.createObjectURL(selectedFile),
+    });
+    //setNuevaFoto(URL.createObjectURL(selectedFile));
   };
 
   const handleChangeNombreCompleto = (event) => {
@@ -144,33 +150,48 @@ const Ajustes = () => {
 
     if (isValid) {
       try {
-        const storageRef = ref(storage, `fotosPerfil/${nombreCompleto}`);
-        const uploadTask = uploadBytesResumable(storageRef, imagen);
+        if (imagen.file) {
+          const storageRef = ref(storage, `fotosPerfil/${nombreCompleto}`);
+          const uploadTask = uploadBytesResumable(storageRef, imagen.file);
 
-        await new Promise((resolve, reject) => {
           uploadTask.on(
             "state_changed",
-            () => {},
-            reject,
-            () => {
-              resolve();
+            (snapshot) => {
+              // Manejar el progreso de carga si es necesario
+            },
+            (error) => {
+              console.error(error);
+            },
+            async () => {
+              try {
+                const downloadURL = await getDownloadURL(
+                  uploadTask.snapshot.ref
+                );
+
+                await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+                  photoURL: downloadURL,
+                  displayName: nombre,
+                  fullName: nombreCompleto,
+                });
+
+                console.log("Cambios guardados exitosamente");
+              } catch (error) {
+                console.error(error);
+              }
             }
           );
-        });
-        
-        const downloadURL = await getDownloadURL(
-          uploadTask.snapshot.ref
-        );
+        } else {
+          await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+            displayName: nombre,
+            fullName: nombreCompleto,
+          });
 
-        await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
-          photoURL: downloadURL,
-          displayName: nombre,
-          fullName: nombreCompleto,
-        });
-        
-        setEditar(false);
+          console.log("Cambios guardados exitosamente");
+        }
       } catch (error) {
         console.error("Error al guardar los cambios", error);
+      } finally {
+        setEditar(false);
       }
     }
   };
@@ -181,9 +202,26 @@ const Ajustes = () => {
         "¿Estás seguro de que deseas eliminar tu cuenta?"
       );
       if (confirmation) {
-        await deleteDoc(doc(baseDatos, "usuarios", currentUser.uid));
-        await currentUser.delete();
-        console.log("Cuenta eliminada exitosamente");
+        await deleteUser(auth.currentUser, currentUser.email);
+
+        const usuarioDocRef = doc(baseDatos, "usuarios", currentUser.uid);
+        const usuarioDoc = await getDoc(usuarioDocRef);
+        const usuarioData = usuarioDoc.data();
+
+        if (usuarioData) {
+          await updateDoc(usuarioDocRef, {
+            email: "",
+            fullName: "Usuario No Encontrado",
+            displayName: "Usuario No Encontrado",
+            photoURL:
+              "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
+            connected: null,
+          });
+
+          await signOut(auth);
+        }
+
+        
       }
     } catch (error) {
       console.error("Error al eliminar la cuenta", error);
@@ -201,6 +239,7 @@ const Ajustes = () => {
     }
   };
 
+  /*
   const handleDarkModeChange = async (e) => {
     console.log(e.target.checked);
     setDarkMode(e.target.checked);
@@ -208,6 +247,7 @@ const Ajustes = () => {
       dark: e.target.checked,
     });
   };
+  */
 
   useEffect(() => {
     const rootElement = document.getElementById("root");
@@ -316,9 +356,9 @@ const Ajustes = () => {
         <div className="ajustes-section">
           <label htmlFor="nuevaFoto">
             <p>Foto:</p>
-            {imagen && (
+            {imagen.localURL && (
               <img
-                src={imagen}
+                src={imagen.localURL}
                 alt="Imagen de perfil"
                 style={editar ? { cursor: "pointer" } : {}}
               />
@@ -438,6 +478,7 @@ const Ajustes = () => {
           </button>
         </div>
       </form>
+      {/* 
       <div className="ajustes-section">
         <h3>Modo oscuro</h3>
         <label htmlFor="darkModeToggle" className="switch">
@@ -450,6 +491,7 @@ const Ajustes = () => {
           <span className="slider round"></span>
         </label>
       </div>
+      */}
       <div className="ajustes-section">
         <button onClick={handleSignOut} className="submit-btn">
           Cerrar sesión

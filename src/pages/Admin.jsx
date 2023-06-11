@@ -1,14 +1,16 @@
 import React, { useState, useContext, useEffect } from "react";
 import UsuariosOrg from "../components/UsuariosOrg";
 import UsuariosCrear from "../components/UsuariosCrear";
-import Analisis from "../components/Analisis";
 import { AuthContext } from "../context/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { baseDatos } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { currentUser } = useContext(AuthContext);
   const [seleccionado, setSeleccionado] = useState("usuariosOrg");
+
+  const navigate = useNavigate();
 
   const handleClick = (seccion) => {
     if (seleccionado === seccion) {
@@ -21,61 +23,62 @@ const Admin = () => {
   useEffect(() => {
     const connectUser = async () => {
       try {
-        currentUser && await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
-          connected: true,
-        });
+        currentUser &&
+          (await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+            connected: true,
+          }));
       } catch (error) {
         console.log("Error al actualizar el estado del usuario:", error);
       }
     };
-  
+
     const disconnectUser = async () => {
       try {
-        currentUser && await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
-          connected: false,
-        });
+        currentUser &&
+          (await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+            connected: false,
+          }));
       } catch (error) {
         console.log("Error al desconectar al usuario:", error);
       }
     };
-  
+
     connectUser();
-  
+
     window.addEventListener("beforeunload", disconnectUser);
-  
+
     return () => {
       window.removeEventListener("beforeunload", disconnectUser);
     };
-  })
+  });
+
+  const handleBackButton = () => {
+    navigate("/");
+  };
 
   return (
     <div className="admin-container">
       <div className="admin-buttons">
-      <button
-        onClick={() => handleClick("usuariosOrg")}
-        disabled={seleccionado === "usuariosOrg"}
-      >
-        Organizar usuarios
-      </button>
-      <button
-        onClick={() => handleClick("usuariosCrear")}
-        disabled={seleccionado === "usuariosCrear"}
-      >
-        Crear usuarios
-      </button>
-      <button
-        onClick={() => handleClick("analisis")}
-        disabled={seleccionado === "analisis"}
-      >
-        Análisis
-      </button>
+        <button className="backButton" onClick={handleBackButton}>
+          Regresar
+        </button>
+        <button
+          onClick={() => handleClick("usuariosOrg")}
+          disabled={seleccionado === "usuariosOrg"}
+        >
+          Organizar usuarios
+        </button>
+        <button
+          onClick={() => handleClick("usuariosCrear")}
+          disabled={seleccionado === "usuariosCrear"}
+        >
+          Crear usuarios
+        </button>
       </div>
       <div className="admin-content">
-      {seleccionado === "usuariosOrg" && <UsuariosOrg />}
-      {seleccionado === "usuariosCrear" && <UsuariosCrear />}
-      {seleccionado === "analisis" && <Analisis />} 
+        {seleccionado === "usuariosOrg" && <UsuariosOrg />}
+        {seleccionado === "usuariosCrear" && <UsuariosCrear />}
       </div>
-      
     </div>
   );
 };

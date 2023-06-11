@@ -16,6 +16,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 const Input = () => {
   const [text, setText] = useState("");
   const [img, setImg] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
@@ -23,55 +24,95 @@ const Input = () => {
   const apiChat = "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";
   const apiURL = "https://api.openai.com/v1/chat/completions";
 
-  const handleKey = (envio) => {
-    envio.code === "Enter" && handleSend();
+  const handleKey = (event) => {
+    if (event.code === "Enter") {
+      handleSend();
+    }
   };
 
   const handleSend = async () => {
-    console.log("Antes de verificar el contenido");
     if (!text && !img) {
-      console.log("No hay texto ni imagen");
       return;
     }
-  
-    console.log("Después de verificar el contenido");
-  
+
     if (img) {
-      console.log("Subiendo imagen al almacenamiento");
-      const storageRef = ref(storage, `contenidoChat/img_${uuid()}`);
-      const uploadTask = uploadBytesResumable(storageRef, img);
-  
-      await new Promise((resolve, reject) => {
-        uploadTask.on(
-          "state_changed",
-          () => {},
-          reject,
-          () => {
-            resolve();
-          }
-        );
-      });
-  
-      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-  
-      console.log("URL de descarga de la imagen:", downloadURL);
-  
-      await updateDoc(doc(baseDatos, "chats", data.chatId), {
-        mensajes: arrayUnion({
-          id: uuid(),
-          text: "",
-          senderId: currentUser.uid,
-          date: Timestamp.now(),
-          img: downloadURL,
-        }),
-      });
+      const fileExtension = img.name.split(".").pop().toLowerCase();
+      const imageExtensions = ["jpg", "jpeg", "png", "gif", ".svg"];
+
+      if (imageExtensions.includes(fileExtension)) {
+        console.log("Subiendo imagen al almacenamiento");
+        const storageRef = ref(storage, `contenidoChat/${img.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, img);
+
+        setIsUploading(true);
+
+        await new Promise((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            () => {},
+            reject,
+            () => {
+              resolve();
+            }
+          );
+        });
+
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+        console.log("URL de descarga de la imagen:", downloadURL);
+
+        await updateDoc(doc(baseDatos, "chats", data.chatId), {
+          mensajes: arrayUnion({
+            id: uuid(),
+            text: text,
+            senderId: currentUser.uid,
+            date: Timestamp.now(),
+            img: downloadURL,
+          }),
+        });
+
+        setIsUploading(false);
+      } else {
+        console.log("Subiendo archivo al almacenamiento");
+        const storageRef = ref(storage, `contenidoChat/${img.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, img);
+
+        setIsUploading(true);
+
+        await new Promise((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            () => {},
+            reject,
+            () => {
+              resolve();
+            }
+          );
+        });
+
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+        console.log("URL de descarga del archivo:", downloadURL);
+
+        await updateDoc(doc(baseDatos, "chats", data.chatId), {
+          mensajes: arrayUnion({
+            id: uuid(),
+            text: text,
+            senderId: currentUser.uid,
+            date: Timestamp.now(),
+            file: downloadURL,
+            fileName: img.name,
+          }),
+        });
+        setIsUploading(false);
+      }
     } else {
       console.log("No hay imagen, actualizando mensajes en Firestore");
-  
+
       await updateDoc(doc(baseDatos, "chats", data.chatId), {
         mensajes: arrayUnion({
           id: uuid(),
-          text,
+          text: text,
           senderId: currentUser.uid,
           date: Timestamp.now(),
         }),
@@ -84,28 +125,24 @@ const Input = () => {
       [data.chatId + ".ultimoMens"]: {
         text: text || img.name,
         senderId: currentUser.uid,
-        date: Timestamp.now()
+        date: Timestamp.now(),
       },
       [data.chatId + ".date"]: serverTimestamp(),
     });
 
-    if(data.usuario.uid !== apiChat){
+    if (data.usuario.uid !== apiChat) {
       await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
         [data.chatId + ".ultimoMens"]: {
           text: text || img.name,
           senderId: currentUser.uid,
-          date: Timestamp.now()
+          date: Timestamp.now(),
         },
         [data.chatId + ".date"]: serverTimestamp(),
       });
     }
-    
 
     setText("");
     setImg(null);
-
-    console.log("Valor de data.usuario?.uid:", data.usuario?.uid);
-    console.log("Valor de apiChat:", apiChat);
 
     if (data.usuario?.uid === apiChat) {
       console.log("Enviando solicitud a ChatGPT");
@@ -156,37 +193,52 @@ const Input = () => {
     }
   };
 
+  const handleCancel = () => {
+    setImg(null);
+  };
+
   const isSendButtonDisabled = !text && !img;
 
   return (
-    <div className="input">
-      <input
-        type="text"
-        placeholder="Escribe un mensaje..."
-        onChange={(contenido) => setText(contenido.target.value)}
-        onKeyDown={handleKey}
-        value={text}
-        id="mensaje"
-      />
-      <div className="enviar">
-        {data.usuario?.uid !== apiChat ? (
-          <>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              id="archivo"
-              onChange={(contenido) => setImg(contenido.target.files[0])}
-            />
-            <label htmlFor="archivo">
-              <img src={Annadir} alt="" />
-            </label>
-          </>
-        ) : null}
-        <button onClick={handleSend} disabled={isSendButtonDisabled}>
-          Enviar
-        </button>
+    <>
+      <div className="input">
+        <input
+          type="text"
+          placeholder="Escribe un mensaje..."
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={handleKey}
+          value={text}
+          id="mensaje"
+        />
+        <div className="enviar">
+          {img && !isUploading && (
+            <button onClick={handleCancel}>Cancelar</button>
+          )}
+
+          {!img && (
+            <>
+              <input
+                type="file"
+                style={{ display: "none" }}
+                id="archivo"
+                onChange={(event) => setImg(event.target.files[0])}
+              />
+              <label htmlFor="archivo">
+                <img src={Annadir} alt="" />
+              </label>
+            </>
+          )}
+
+          {isUploading ? (
+            <p>Enviando...</p>
+          ) : (
+            <button onClick={handleSend} disabled={isSendButtonDisabled}>
+              Enviar
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -42,15 +42,14 @@ const Mensaje = ({ mensaje }) => {
     setImagenAmpliada(imagen);
   };
 
-  const handleFileDownload = (file) => {
-    const url = URL.createObjectURL(file);
+  const handleFileDownload = (fileURL, fileName) => {
     const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name;
+    link.href = fileURL;
+    link.download = fileName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
     link.click();
-    URL.revokeObjectURL(url);
   };
-  
 
   return (
     <div
@@ -71,25 +70,28 @@ const Mensaje = ({ mensaje }) => {
       </div>
       <div className="contenidomensaje">
         <p>
-          {mensaje.img ? (
+          {mensaje.img && (
             <div
               className="imagen-contenedor"
               onClick={() => handleImagenClick(mensaje.img)}
             >
               <img src={mensaje.img} alt="" />
             </div>
-          ) : mensaje.file ? (
+          )}
+          {mensaje.file && (
             <div className="archivo-contenedor">
               <p
                 className="nombre-archivo"
-                onClick={() => handleFileDownload(mensaje.file)} style={{cursor: "pointer"}}
+                onClick={() =>
+                  handleFileDownload(mensaje.file, mensaje.fileName)
+                }
+                style={{ cursor: "pointer" }}
               >
                 {mensaje.fileName}
               </p>
             </div>
-          ) : null}
-
-          {mensaje.text.trim() !== "" && mensaje.text}
+          )}
+          {mensaje.text.trim() !== "" && <span>{mensaje.text}</span>}
         </p>
       </div>
       <div className="hora">
@@ -99,7 +101,9 @@ const Mensaje = ({ mensaje }) => {
       {imagenAmpliada && (
         <div className="imagen-ampliada">
           <img src={imagenAmpliada} alt="Imagen ampliada" />
-          <button onClick={() => setImagenAmpliada(null)} className="cerrar">Cerrar</button>
+          <button onClick={() => setImagenAmpliada(null)} className="cerrar">
+            Cerrar
+          </button>
         </div>
       )}
     </div>

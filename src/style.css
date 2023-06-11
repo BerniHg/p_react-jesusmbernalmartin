@@ -486,6 +486,18 @@ button {
   color: blue;
 }
 
+.mensaje.duenno .archivo-contenedor p.nombre-archivo {
+  background-color: #b0652d;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.mensaje.contacto .archivo-contenedor p.nombre-archivo {
+  background-color: lightgray;
+  border-radius: 10px;
+  width: fit-content;
+}
+
 .mensaje.contacto .contenidomensaje p {
   background-color: whitesmoke;
   border-radius: 0px 10px 10px 10px;

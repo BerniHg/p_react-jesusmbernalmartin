@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Foto from "../img/annadirFoto.png";
-import UsuarioFoto from "../img/usuario.jpg";
 import PaginaCarga from "../components/PaginaCarga";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, baseDatos, storage } from "../firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {
   doc,
   setDoc,
-  where, query, getDocs, collection
+  where, query, getDocs, collection, updateDoc
 } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 import md5 from "md5";
@@ -44,7 +43,7 @@ const Registro = () => {
     const nombre_usuario = valores.target[1].value;
     const correo = valores.target[2].value;
     const contrasenna = valores.target[3].value;
-    const foto = fotoSeleccionada || UsuarioFoto;
+    const foto = fotoSeleccionada;
   
     const errors = {};
   
@@ -84,7 +83,7 @@ const Registro = () => {
   
     if (Object.keys(errors).length === 0) {
       try {
-        const storageRef = ref(storage, `fotosPerfil/${nombre_completo}`);
+        const storageRef = ref(storage, `fotosPerfil/${nombre_usuario}`);
         const uploadTask = uploadBytesResumable(storageRef, foto);
   
         uploadTask.on(
@@ -109,7 +108,8 @@ const Registro = () => {
                 connected: false,
                 role: "user",
                 dark: false,
-                password: md5(contrasenna)
+                password: md5(contrasenna),
+                enable: true
               });
   
               await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
@@ -118,6 +118,13 @@ const Registro = () => {
                 displayName: nombre_usuario,
                 photoURL: downloadURL,
               });
+
+              if(!fotoSeleccionada)
+              {
+                await updateDoc(doc(baseDatos, "usuarios", datos.user.uid), {
+                  photoURL: "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
+                });
+              }
   
               navigate("/login");
             } catch (error) {

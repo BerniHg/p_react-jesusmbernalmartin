@@ -6,32 +6,68 @@ import {
   doc,
   updateDoc,
   getDoc,
-  query,
-  where,
 } from "firebase/firestore";
-import { baseDatos } from "../firebase";
+import { baseDatos, storage, auth } from "../firebase";
 import PaginaCarga from "../components/PaginaCarga";
 import { AuthContext } from "../context/AuthContext";
-import { getAuth, deleteUser } from "firebase/auth";
+import {
+  deleteUser,
+  updatePassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { ref } from "firebase/storage";
+import { uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
+import md5 from "md5";
 
 const UsuariosOrg = () => {
   const { currentUser } = useContext(AuthContext);
   const [usuarios, setUsuarios] = useState([]);
-  const [fotoSeleccionada, setFotoSeleccionada] = useState(false);
+  const [fotoSeleccionada, setFotoSeleccionada] = useState("");
+  const [foto, setFoto] = useState("");
   const [edicionUsuarios, setEdicionUsuarios] = useState({});
   const [datosEditados, setDatosEditados] = useState({});
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
-  const [criterioOrden, setCriterioOrden] = useState("fullName");
+  const [criterioOrden, setCriterioOrden] = useState("role");
   const [ordenAscendente, setOrdenAscendente] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [usuariosPorPagina] = useState(5);
   const [mostrarUsuarios, setMostrarUsuarios] = useState("todos");
   const [rolUsuario, setRolUsuario] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [rolFiltrado, setRolFiltrado] = useState("");
+  const regexNombreCompleto =
+    /^[A-Za-zÀ-ÖØ-öø-ÿ]{3,}(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+){0,3}$/;
+  const regexNombreUsuario = /^[a-zA-Z0-9_-]{4,16}$/;
+  const regexContrasena =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_])[a-zA-Z\d-_]{8,}$/;
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const obtenerDatos = async (uid) => {
+      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        setPassword(usuarioData.password);
+        setEmail(usuarioData.email);
+      }
+    };
+
+    obtenerDatos(currentUser.uid);
+  }, [currentUser.uid]);
 
   const handleSeleccionarFoto = (event) => {
-    let foto = event.target.files[0];
+    const foto = event.target.files[0];
+    console.log("selectedFile", foto);
     setFotoSeleccionada(foto);
+    setFoto({
+      file: foto,
+      localURL: URL.createObjectURL(foto),
+    });
   };
 
   const toggleEdicionUsuario = (uid) => {
@@ -85,70 +121,102 @@ const UsuariosOrg = () => {
     }
   };
 
-  const inhabilitarUsuario = async (uid) => {};
+  const handleFiltrarPorRol = (event) => {
+    setRolFiltrado(event.target.value);
+  };
 
-  const eliminarUsuario = async (uid) => {
+  const inhabilitarUsuario = async (uidUser) => {
     try {
-      // Obtener la información del usuario
-      const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+      const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
       const usuarioDoc = await getDoc(usuarioDocRef);
       const usuarioData = usuarioDoc.data();
 
-      // Verificar si el usuario tiene un correo electrónico
-      if (usuarioData.email) {
-        // Eliminar el correo electrónico de autenticación del usuario
-        const auth = getAuth();
-        await deleteUser(auth, usuarioData.email);
-        console.log(
-          "Correo electrónico de autenticación eliminado correctamente."
-        );
+      if (usuarioData) {
+        await updateDoc(usuarioDocRef, {
+          enable: false,
+        });
       }
 
-      // Obtener la lista de usuarios que hacen referencia al usuario que se eliminará
-      const usuariosSnapshot = await getDocs(
-        query(collection(baseDatos, "chatsUsuarios"), where(uid, "==", true))
+      console.log("Usuario deshabilitado con éxito");
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al deshabilitar el usuario:", error);
+    }
+  };
+
+  const habilitarUsuario = async (uidUser) => {
+    try {
+      const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
+      const usuarioDoc = await getDoc(usuarioDocRef);
+      const usuarioData = usuarioDoc.data();
+
+      if (usuarioData) {
+        await updateDoc(usuarioDocRef, {
+          enable: true,
+        });
+      }
+
+      console.log("Usuario habilitado con éxito");
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al habilitar el usuario:", error);
+    }
+  };
+
+  const eliminarUsuario = async (uidUser, emailUser, passwordUser) => {
+    try {
+      console.log("Paso 1");
+
+      await signInWithEmailAndPassword(auth, emailUser, passwordUser);
+
+      console.log("Paso 2");
+
+      await deleteUser(auth.currentUser, emailUser);
+
+      await signInWithEmailAndPassword(auth, email, password);
+
+      console.log("Paso 3");
+
+      const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
+      const usuarioDoc = await getDoc(usuarioDocRef);
+      const usuarioData = usuarioDoc.data();
+
+      if (usuarioData) {
+        await updateDoc(usuarioDocRef, {
+          email: "",
+          fullName: "Usuario No Encontrado",
+          displayName: "Usuario No Encontrado",
+          photoURL:
+            "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
+          connected: null,
+        });
+      }
+
+      console.log("Paso 4");
+
+      await deleteDoc(doc(baseDatos, "chatsUsuarios", uidUser));
+
+      console.log(
+        "Correo electrónico de autenticación eliminado correctamente."
       );
-      const usuariosReferencia = usuariosSnapshot.docs.map((doc) => doc.id);
-
-      // Actualizar el displayName de los usuarios correspondientes
-      await Promise.all(
-        usuariosReferencia.map(async (usuarioId) => {
-          const usuarioDocRef = doc(baseDatos, "chatsUsuarios", usuarioId);
-          const usuarioDoc = await getDoc(usuarioDocRef);
-          const usuarioData = usuarioDoc.data();
-
-          // Verificar y actualizar el displayName y photoURL si es necesario
-          if (usuarioData.infoUsuario) {
-            await updateDoc(usuarioDocRef, {
-              "infoUsuario.displayName":
-                usuarioData.infoUsuario.displayName || "Usuario No Encontrado",
-              "infoUsuario.photoURL":
-                usuarioData.infoUsuario.photoURL ||
-                "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/usuario.jpg?alt=media&token=1087dfaa-96a5-440c-827e-8e88271d5367&_gl=1*1ad0zim*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjA3MjgwMS42Mi4xLjE2ODYwNzQ2MzAuMC4wLjA.",
-            });
-          }
-        })
-      );
-
-      // Eliminar el usuario de las colecciones correspondientes
-      await deleteDoc(usuarioDocRef);
-      await deleteDoc(doc(baseDatos, "chatsUsuarios", uid));
 
       console.log("Usuario eliminado correctamente.");
 
-      window.location.reload();
+      navigate("/admin");
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
     }
   };
 
-  const confirmarEliminarUsuario = (uid) => {
+  const confirmarEliminarUsuario = (uid, email, password) => {
     const confirmacion = window.confirm(
       "¿Estás seguro de eliminar este usuario?"
     );
 
     if (confirmacion) {
-      eliminarUsuario(uid);
+      eliminarUsuario(uid, email, password);
     }
   };
 
@@ -159,6 +227,16 @@ const UsuariosOrg = () => {
 
     if (confirmacion) {
       inhabilitarUsuario(uid);
+    }
+  };
+
+  const confirmarHabilitarUsuario = (uid) => {
+    const confirmacion = window.confirm(
+      "¿Estás seguro de que quieres habilitar a este usuario?"
+    );
+
+    if (confirmacion) {
+      habilitarUsuario(uid);
     }
   };
 
@@ -180,6 +258,7 @@ const UsuariosOrg = () => {
   const obtenerUsuariosPaginados = () => {
     const indiceUltimoUsuario = paginaActual * usuariosPorPagina;
     const indicePrimerUsuario = indiceUltimoUsuario - usuariosPorPagina;
+    console.log(usuariosOrdenados);
 
     let usuariosFiltradosPaginados = usuariosOrdenados;
 
@@ -192,6 +271,17 @@ const UsuariosOrg = () => {
         (usuario) => !usuario.connected
       );
     }
+
+    if (rolFiltrado) {
+      usuariosFiltradosPaginados = usuariosFiltradosPaginados.filter(
+        (usuario) => usuario.role === rolFiltrado
+      );
+    }
+
+    usuariosFiltradosPaginados = usuariosFiltradosPaginados.slice(
+      indicePrimerUsuario,
+      indiceUltimoUsuario
+    );
 
     usuariosFiltradosPaginados = usuariosFiltradosPaginados.slice(
       indicePrimerUsuario,
@@ -216,13 +306,15 @@ const UsuariosOrg = () => {
         )
       : [];
 
-  const usuariosOrdenados = usuariosFiltrados.sort((a, b) => {
-    const valorA = a[criterioOrden]?.toLowerCase() || "";
-    const valorB = b[criterioOrden]?.toLowerCase() || "";
-    if (valorA < valorB) return ordenAscendente ? -1 : 1;
-    if (valorA > valorB) return ordenAscendente ? 1 : -1;
-    return 0;
-  });
+  const usuariosOrdenados = usuariosFiltrados
+    .filter((usuario) => usuario.email)
+    .sort((a, b) => {
+      const valorA = a[criterioOrden]?.toLowerCase() || "";
+      const valorB = b[criterioOrden]?.toLowerCase() || "";
+      if (valorA < valorB) return ordenAscendente ? -1 : 1;
+      if (valorA > valorB) return ordenAscendente ? 1 : -1;
+      return 0;
+    });
 
   const totalPaginas = Math.ceil(usuariosOrdenados.length / usuariosPorPagina);
 
@@ -246,22 +338,58 @@ const UsuariosOrg = () => {
 
   const guardarCambiosUsuario = async (uid) => {
     toggleEdicionUsuario(uid);
-    setCargando(true); // Activa la pantalla de carga
+
+    const nombreCompleto = datosEditados[uid]?.fullName || "";
+    const nombreUsuario = datosEditados[uid]?.displayName || "";
+
+    const nombreCompletoValido = regexNombreCompleto.test(nombreCompleto);
+    const nombreUsuarioValido = regexNombreUsuario.test(nombreUsuario);
+
+    if (!nombreCompletoValido ||!nombreUsuarioValido) {
+      alert("Uno de los campos no cumple su patrón");
+      return;
+    }
 
     try {
+      setCargando(true);
       await updateDoc(doc(baseDatos, "usuarios", uid), datosEditados[uid]);
+      const storageRef = ref(
+        storage,
+        `fotosPerfil/${datosEditados[uid].displayName}`
+      );
+      const uploadTask = uploadBytesResumable(storageRef, foto.file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {},
+        (error) => console.error(error),
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+            await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+              photoURL: downloadURL,
+            });
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      );
+
       console.log("Usuario actualizado correctamente.");
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
     }
-
-    setCargando(false); // Desactiva la pantalla de carga
+    window.location.reload();
+    setCargando(false);
   };
 
   useEffect(() => {
     const obtenerUsuarios = async () => {
       const usuariosSnapshot = await getDocs(collection(baseDatos, "usuarios"));
-      const usuariosData = usuariosSnapshot.docs.map((doc) => doc.data());
+      const usuariosData = usuariosSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((usuario) => usuario.email !== !email);
       setUsuarios(usuariosData);
     };
 
@@ -270,7 +398,64 @@ const UsuariosOrg = () => {
     if (currentUser) {
       obtenerRolUsuario(currentUser.uid);
     }
-  }, [currentUser]);
+  }, [currentUser, email]);
+
+  const cambiarContrasenna = async (uidUser, emailUser, passwordUser) => {
+    let contrasennaNueva = window.prompt("Contraseña nueva:");
+    if (contrasennaNueva === null) {
+      return;
+    }
+    while (!regexContrasena.test(contrasennaNueva)) {
+      contrasennaNueva = window.prompt(
+        "La contraseña no cumple con los requisitos, vuelve a escribirla:"
+      );
+      if (contrasennaNueva === null) {
+        return;
+      }
+    }
+
+    let contrasennaNuevaRepetir = window.prompt("Repite la contraseña:");
+    if (contrasennaNuevaRepetir === null) {
+      return;
+    }
+    while (contrasennaNueva !== contrasennaNuevaRepetir) {
+      contrasennaNueva = window.prompt(
+        "Las contraseñas no coincidieron, vuelve a escribirla:"
+      );
+      if (contrasennaNueva === null) {
+        return;
+      }
+      while (!regexContrasena.test(contrasennaNueva)) {
+        contrasennaNueva = window.prompt(
+          "La contraseña no cumple con los requisitos, vuelve a escribirla:"
+        );
+        if (contrasennaNueva === null) {
+          return;
+        }
+      }
+      contrasennaNuevaRepetir = window.prompt("Repite la contraseña:");
+      if (contrasennaNuevaRepetir === null) {
+        return;
+      }
+    }
+
+    try {
+      const hashedContrasenna = md5(contrasennaNueva);
+      console.log("Paso 1", emailUser, passwordUser);
+      await signInWithEmailAndPassword(auth, emailUser, passwordUser);
+      console.log("Paso 2");
+      await updatePassword(auth.currentUser, hashedContrasenna);
+      console.log("Paso 3");
+      await updateDoc(doc(baseDatos, "usuarios", uidUser), {
+        password: hashedContrasenna,
+        connected: false,
+      });
+      console.log("Paso 4", auth);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Error al cambiar la contraseña:", error);
+    }
+  };
 
   return (
     <div className="config">
@@ -306,6 +491,12 @@ const UsuariosOrg = () => {
           <option value="conectados">Mostrar conectados</option>
           <option value="desconectados">Mostrar desconectados</option>
         </select>
+        <select value={rolFiltrado} onChange={handleFiltrarPorRol}>
+          <option value="">Mostrar todos</option>
+          <option value="chief">Mostrar jefes</option>
+          <option value="admin">Mostrar admins</option>
+          <option value="user">Mostrar usuarios</option>
+        </select>
       </div>
       <table>
         <thead>
@@ -320,7 +511,7 @@ const UsuariosOrg = () => {
         </thead>
         <tbody>
           {usuariosPaginados.map((usuario) =>
-            usuario.displayName !== "ChatGPT" ? (
+            usuario.email ? (
               <tr key={usuario.uid}>
                 {cargando ? (
                   <td colSpan={6}>
@@ -332,7 +523,7 @@ const UsuariosOrg = () => {
                       <select
                         name="rol"
                         id="rol"
-                        value={usuario.role}
+                        value={datosEditados[usuario.uid]?.role || ""}
                         onChange={(e) =>
                           setDatosEditados((prevState) => ({
                             ...prevState,
@@ -345,15 +536,40 @@ const UsuariosOrg = () => {
                       >
                         {rolUsuario === "chief" && (
                           <>
-                            <option value="chief">Jefe</option>
-                            <option value="admin">Admin</option>
-                            <option value="user">Usuario</option>
+                            <option
+                              value="chief"
+                              selected={usuario.role === "chief"}
+                            >
+                              Jefe
+                            </option>
+                            <option
+                              value="admin"
+                              selected={usuario.role === "admin"}
+                            >
+                              Admin
+                            </option>
+                            <option
+                              value="user"
+                              selected={usuario.role === "user"}
+                            >
+                              Usuario
+                            </option>
                           </>
                         )}
                         {rolUsuario === "admin" && (
                           <>
-                            <option value="admin">Admin</option>
-                            <option value="user">Usuario</option>
+                            <option
+                              value="admin"
+                              selected={usuario.role === "admin"}
+                            >
+                              Admin
+                            </option>
+                            <option
+                              value="user"
+                              selected={usuario.role === "user"}
+                            >
+                              Usuario
+                            </option>
                           </>
                         )}
                       </select>
@@ -393,6 +609,7 @@ const UsuariosOrg = () => {
                         style={{ display: "none" }}
                         type="file"
                         id="archivo"
+                        src={datosEditados[usuario.uid]?.photoURL || foto.URL}
                         accept="image/png,image/jpeg"
                         onChange={handleSeleccionarFoto}
                       />
@@ -441,23 +658,66 @@ const UsuariosOrg = () => {
                     </td>
                     <td>{usuario.email}</td>
                     <td>{usuario.connected ? "Conectado" : "Desconectado"}</td>
-                    <td className="botones">
-                      <button onClick={() => toggleEdicionUsuario(usuario.uid)}>
-                        Editar
-                      </button>
-                      <button
-                        onClick={() =>
-                          confirmarInhabilitarUsuario(usuario.email)
-                        }
-                      >
-                        Inhabilitar
-                      </button>
-                      <button
-                        onClick={() => confirmarEliminarUsuario(usuario.uid)}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
+                    {rolUsuario === "admin" && usuario.role === "chief" ? (
+                      <td></td>
+                    ) : (
+                      <td className="botones">
+                        <button
+                          onClick={() => toggleEdicionUsuario(usuario.uid)}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            cambiarContrasenna(
+                              usuario.uid,
+                              usuario.email,
+                              usuario.password
+                            )
+                          }
+                        >
+                          C. contraseña
+                        </button>
+
+                        {usuario.enable ? (
+                          <button
+                            onClick={() =>
+                              confirmarInhabilitarUsuario(
+                                usuario.uid,
+                                usuario.email,
+                                usuario.password
+                              )
+                            }
+                          >
+                            Inhabilitar
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              confirmarHabilitarUsuario(
+                                usuario.uid,
+                                usuario.email,
+                                usuario.password
+                              )
+                            }
+                          >
+                            Habilitar
+                          </button>
+                        )}
+                        <button
+                          onClick={() =>
+                            confirmarEliminarUsuario(
+                              usuario.uid,
+                              usuario.email,
+                              usuario.password
+                            )
+                          }
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </>
                 )}
               </tr>

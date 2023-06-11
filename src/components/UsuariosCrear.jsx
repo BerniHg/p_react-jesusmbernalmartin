@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import Foto from "../img/annadirFoto.png";
-import UsuarioFoto from "../img/usuario.jpg";
 import PaginaCarga from "../components/PaginaCarga";
-import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { auth, baseDatos, storage } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {
@@ -13,6 +16,7 @@ import {
   getDocs,
   getDoc,
   collection,
+  updateDoc,
 } from "firebase/firestore";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -38,14 +42,14 @@ const UsuariosCrear = () => {
   useEffect(() => {
     const obtenerDatos = async (uid) => {
       const usuarioDocRef = doc(baseDatos, "usuarios", uid);
-        const usuarioDocSnap = await getDoc(usuarioDocRef);
-        if (usuarioDocSnap.exists()) {
-          const usuarioData = usuarioDocSnap.data();
-          setPassword(usuarioData.password)
-          setEmail(usuarioData.email); 
-        }
-    }
-    
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        setPassword(usuarioData.password);
+        setEmail(usuarioData.email);
+      }
+    };
+
     obtenerDatos(currentUser.uid);
   }, [currentUser.uid]);
 
@@ -90,12 +94,12 @@ const UsuariosCrear = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formulario = event.target;
-    const rol = formulario.rol.value;
     const nombre_completo = formulario.nombre_completo.value;
     const nombre_usuario = formulario.nombre_usuario.value;
     const correo = formulario.email.value;
     const contrasenna = formulario.password.value;
-    const foto = fotoSeleccionada || UsuarioFoto;
+    const foto =
+      fotoSeleccionada;
 
     const errors = {};
 
@@ -140,8 +144,13 @@ const UsuariosCrear = () => {
       try {
         setMostrarPaginaCarga(true);
 
-        const datos = await createUserWithEmailAndPassword(auth, correo, md5(contrasenna));
-        const storageRef = ref(storage, `fotosPerfil/${nombre_completo}`);
+        const datos = await createUserWithEmailAndPassword(
+          auth,
+          correo,
+          md5(contrasenna)
+        );
+
+        const storageRef = ref(storage, `fotosPerfil/${nombre_usuario}`);
         const uploadTask = uploadBytesResumable(storageRef, foto);
 
         uploadTask.on(
@@ -152,7 +161,6 @@ const UsuariosCrear = () => {
           },
           async () => {
             try {
-              
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
               await setDoc(doc(baseDatos, "usuarios", datos.user.uid), {
@@ -162,8 +170,9 @@ const UsuariosCrear = () => {
                 email: correo,
                 photoURL: downloadURL,
                 connected: false,
-                role: rol,
-                password: contrasenna
+                role: formulario.rol.value,
+                password: md5(contrasenna),
+                enable: true,
               });
 
               await setDoc(doc(baseDatos, "chatsUsuarios", datos.user.uid), {});
@@ -172,6 +181,17 @@ const UsuariosCrear = () => {
                 displayName: nombre_usuario,
                 photoURL: downloadURL,
               });
+
+              await updateDoc(doc(baseDatos, "usuarios", datos.user.uid), {
+                connected: false,
+              });
+
+              if(!fotoSeleccionada)
+              {
+                await updateDoc(doc(baseDatos, "usuarios", datos.user.uid), {
+                  photoURL: "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
+                });
+              }
 
               navigate("/admin");
               await signInWithEmailAndPassword(auth, email, password);
@@ -187,6 +207,8 @@ const UsuariosCrear = () => {
       } catch (error) {
         console.log(error);
         setError(true);
+      } finally {
+        setMostrarPaginaCarga(false);
       }
     }
   };
@@ -294,20 +316,24 @@ const UsuariosCrear = () => {
             ) : (
               <label htmlFor="archivo">
                 <div className="fotoContainer">
-                  <img src={Foto} alt="Añadir foto" className="foto" />
+                  <img
+                    src={Foto}
+                    alt="Añadir foto"
+                    className="foto"
+                  />
                   <span className="anadirFoto">Añade una foto de perfil</span>
                 </div>
               </label>
             )}
-            <button type="submit" className="boton">
-              Registrar nuevo usuario
-            </button>
+
             {error && (
               <span className="error">
-                Ha ocurrido un error durante el registro. Por favor, inténtelo
-                nuevamente.
+                Ha ocurrido un error. Inténtalo de nuevo más tarde.
               </span>
             )}
+            <button className="boton" type="submit">
+              Crear usuario
+            </button>
           </form>
         </div>
       )}
