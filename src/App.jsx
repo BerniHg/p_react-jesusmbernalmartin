@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Navigate, BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { baseDatos } from "./firebase";
 import { AuthContext } from "./context/AuthContext";
@@ -8,6 +8,7 @@ import Registro from "./pages/Registro";
 import Menu from "./pages/Menu";
 import Ajustes from "./pages/Ajustes";
 import Admin from "./pages/Admin";
+import NotFoundPage from "./pages/NotFoundPage";
 import "./style.css";
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
         if (usuarioDocSnap.exists()) {
           const usuarioData = usuarioDocSnap.data();
           const userRole = usuarioData.role;
-          console.log(userRole)
+          console.log(userRole);
           setRolUsuario(userRole);
         }
       } catch (error) {
@@ -50,39 +51,40 @@ function App() {
       return children;
     }
   };
-
+  
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/">
           <Route
-            index
-            element={
-              <ProtectedRoute>
-                <Menu />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="ajustes"
-            element={
-              <ProtectedRoute>
-                <Ajustes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="admin"
-            element={
-              <ProtectedRoute>
-                <AdminRoute>
-                  <Admin />
-                </AdminRoute>
-              </ProtectedRoute>
-            }
-          />
+                index
+                element={
+                  <ProtectedRoute>
+                    <Menu />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="ajustes"
+                element={
+                  <ProtectedRoute>
+                    <Ajustes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <Admin />
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
           <Route path="login" element={<Login />} />
           <Route path="registro" element={<Registro />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

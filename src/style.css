@@ -1072,3 +1072,29 @@ button.boton-mostrar-barra img {
     transform: rotate(360deg);
   }
 }
+
+.not-found-page {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.not-found-page__title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.not-found-page__message {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.not-found-page__link {
+  font-size: 16px;
+  color: #d68e5a;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.not-found-page__link:hover {
+  color: #ed995d;
+}
