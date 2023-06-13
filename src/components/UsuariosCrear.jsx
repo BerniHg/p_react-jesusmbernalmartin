@@ -258,6 +258,7 @@ const UsuariosCrear = () => {
             {errors.nombre_completo && (
               <span className="error">{errors.nombre_completo}</span>
             )}
+            <span className="requisitos">Primer nombre / Segundo nombre y apellidos de forma opcional, hasta 3</span>
             <input
               type="text"
               id="nombre_usuario"
@@ -266,6 +267,7 @@ const UsuariosCrear = () => {
             {errors.nombre_usuario && (
               <span className="error">{errors.nombre_usuario}</span>
             )}
+            <span className="requisitos">Mínimo 4 y máximo 16 caracteres con mayúsculas, minúsculas, números, y guiones</span>
             <input type="email" id="email" placeholder="Correo electrónico" />
             {errors.correo && <span className="error">{errors.correo}</span>}
             <div className="input-password-container">
@@ -277,6 +279,7 @@ const UsuariosCrear = () => {
             {errors.contrasenna && (
               <span className="error">{errors.contrasenna}</span>
             )}
+            <span className="requisitos">Mínimo 8 caracteres con mayúsculas, minúsculas, números, y guiones</span>
             <input
               style={{ display: "none" }}
               type="file"
