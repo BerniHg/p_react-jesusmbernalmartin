@@ -129,9 +129,9 @@ const ChatUsuario = ({ chat, currentUser, handleSelect, formatDateWithDay }) => 
       />
       <div className="chatinfo">
         {!chat.infoUsuario.nickName ? (
-          <span>{n_usuario}</span>
+          <p>{n_usuario}</p>
         ) : (
-          <span>{chat.infoUsuario.nickName}</span>
+          <p>{chat.infoUsuario.nickName}</p>
         )}
         <p>
           {chat.ultimoMens?.senderId === currentUser.uid &&

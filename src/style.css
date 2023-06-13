@@ -278,6 +278,9 @@ button {
 
 .chats .chatusuario {
   border-bottom: 1px solid lightgray;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .chats .chatusuario:hover,
@@ -300,22 +303,17 @@ button {
   border: crimson solid 3px;
 }
 
-.chatusuario .chatinfo span.nombre {
-  font-size: 18px;
-}
-
-.chatusuario .chatinfo span.hora {
-  font-size: 14px;
-  color: lightgray;
-}
-
 .chatusuario .chatinfo p {
   font-size: 16px;
   color: #ddd;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  width: 200px;
+  width: 300px;
+}
+
+.chatusuario .chatinfo p.nombre {
+  font-size: 18px;
 }
 
 .chatusuario .chatinfo p.hora {
@@ -340,6 +338,10 @@ button {
 .chatinfo .chatnombre {
   font-size: 18px;
   padding-left: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 500px;
 }
 
 .chatinfo .chatimagen {

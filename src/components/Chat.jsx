@@ -177,16 +177,16 @@ const Chat = () => {
           />
 
           {!nameClicked ? (
-            <span className="chatnombre" id="usuario_nombre">
+            <p className="chatnombre" id="usuario_nombre">
               {estructuraNombre}
-            </span>
+            </p>
           ) : (
             <>
               <input
                 type="text"
                 value={nuevoNombre}
                 onChange={(event) => setNuevoNombre(event.target.value)}
-                id="nuevoNombre"
+                id="nuevoNombre" maxLength={20}
               />
               <input type="button" value="Cambiar" onClick={cambiarNombre} />
             </>
