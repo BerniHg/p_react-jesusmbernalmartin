@@ -18,27 +18,34 @@ const Login = () => {
   const [mostrarContrasenna, setMostrarContrasenna] = useState(false);
   const navigate = useNavigate();
 
+  // Función para manejar el envío del formulario de inicio de sesión
   const handleSubmit = async (event) => {
     event.preventDefault();
     setDisable(false);
     setError(false);
     setMostrarContrasenna(false);
+
     const correo = event.target[0].value;
     const contrasenna = event.target[1].value;
-  
+
     try {
       setMostrarPaginaCarga(true);
+
+      // Obtener los documentos de usuarios que coinciden con el correo electrónico ingresado
       const usuariosSnapshot = await getDocs(
         query(collection(baseDatos, "usuarios"), where("email", "==", correo))
-      );
-  
-      const enableValues = usuariosSnapshot.docs.map((doc) => doc.data().enable);
-      const enable = enableValues.includes(true);
-      
+      ); 
+
+      // Obtener los valores de la propiedad "enable" de los documentos
+      const enableValues = usuariosSnapshot.docs.map((doc) => doc.data().enable); 
+
+      const enable = enableValues.includes(true); 
+
+      // Si no hay ningún usuario habilitado con ese correo electrónico, se saca al usuario afuera
       if (!enable) {
-        setDisable(true);
+        setDisable(true); 
       } else {
-        await signInWithEmailAndPassword(auth, correo, md5(contrasenna));
+        await signInWithEmailAndPassword(auth, correo, md5(contrasenna)); 
         navigate("/");
       }
     } catch (error) {
@@ -47,14 +54,15 @@ const Login = () => {
       setMostrarPaginaCarga(false);
     }
   };
-  
+
+  // Función para alternar la visibilidad de la contraseña ingresada
   const handleTogglePassword = () => {
     setMostrarContrasenna(!mostrarContrasenna);
   };
 
   useEffect(() => {
     return () => {
-      // Realizar limpieza de efecto
+      // Realizar limpieza de efecto (si es necesario)
     };
   }, []);
 

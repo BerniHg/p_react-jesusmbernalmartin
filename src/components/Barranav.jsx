@@ -15,9 +15,12 @@ const Barranav = () => {
   const [foto, setFoto] = useState("");
 
   useEffect(() => {
+    // Función para obtener el rol del usuario actual
     const obtenerRolUsuario = async (uid) => {
       try {
+        // Obtener la referencia al documento del usuario en Firestore
         const usuarioDocRef = doc(baseDatos, "usuarios", uid);
+        // Obtener los datos del documento del usuario
         const usuarioDocSnap = await getDoc(usuarioDocRef);
         if (usuarioDocSnap.exists()) {
           const usuarioData = usuarioDocSnap.data();
@@ -39,11 +42,14 @@ const Barranav = () => {
     }
   }, [currentUser]);
 
+  // Función para cerrar sesión
   const handleSignOut = async () => {
     try {
+      // Actualizar el campo "connected" del usuario en Firestore
       await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
         connected: false
       });
+      // Cerrar sesión del usuario
       await signOut(auth);
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
@@ -70,4 +76,3 @@ const Barranav = () => {
 };
 
 export default Barranav;
-

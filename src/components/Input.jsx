@@ -21,15 +21,19 @@ const Input = () => {
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
 
+  /*
   const apiChat = "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";
   const apiURL = "https://api.openai.com/v1/chat/completions";
+  */
 
+  // Maneja el evento de presionar una tecla
   const handleKey = (event) => {
     if (event.code === "Enter") {
       handleSend();
     }
   };
 
+  // Maneja el envío del mensaje
   const handleSend = async () => {
     if (!text && !img) {
       return;
@@ -40,7 +44,6 @@ const Input = () => {
       const imageExtensions = ["jpg", "jpeg", "png", "gif", ".svg"];
 
       if (imageExtensions.includes(fileExtension)) {
-        console.log("Subiendo imagen al almacenamiento");
         const storageRef = ref(storage, `contenidoChat/${img.name}`);
         const uploadTask = uploadBytesResumable(storageRef, img);
 
@@ -58,8 +61,6 @@ const Input = () => {
         });
 
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-        console.log("URL de descarga de la imagen:", downloadURL);
 
         await updateDoc(doc(baseDatos, "chats", data.chatId), {
           mensajes: arrayUnion({
@@ -73,7 +74,6 @@ const Input = () => {
 
         setIsUploading(false);
       } else {
-        console.log("Subiendo archivo al almacenamiento");
         const storageRef = ref(storage, `contenidoChat/${img.name}`);
         const uploadTask = uploadBytesResumable(storageRef, img);
 
@@ -91,8 +91,6 @@ const Input = () => {
         });
 
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-        console.log("URL de descarga del archivo:", downloadURL);
 
         await updateDoc(doc(baseDatos, "chats", data.chatId), {
           mensajes: arrayUnion({
@@ -107,7 +105,6 @@ const Input = () => {
         setIsUploading(false);
       }
     } else {
-      console.log("No hay imagen, actualizando mensajes en Firestore");
 
       await updateDoc(doc(baseDatos, "chats", data.chatId), {
         mensajes: arrayUnion({
@@ -119,8 +116,6 @@ const Input = () => {
       });
     }
 
-    console.log("Actualizando información del usuario en Firestore");
-
     await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
       [data.chatId + ".ultimoMens"]: {
         text: text || img.name,
@@ -130,7 +125,7 @@ const Input = () => {
       [data.chatId + ".date"]: serverTimestamp(),
     });
 
-    if (data.usuario.uid !== apiChat) {
+    //if (data.usuario.uid !== apiChat) {
       await updateDoc(doc(baseDatos, "chatsUsuarios", data.usuario.uid), {
         [data.chatId + ".ultimoMens"]: {
           text: text || img.name,
@@ -139,11 +134,12 @@ const Input = () => {
         },
         [data.chatId + ".date"]: serverTimestamp(),
       });
-    }
+    //}
 
     setText("");
     setImg(null);
 
+    /*
     if (data.usuario?.uid === apiChat) {
       console.log("Enviando solicitud a ChatGPT");
       try {
@@ -191,8 +187,10 @@ const Input = () => {
         console.error("Error al enviar la solicitud a ChatGPT:", error);
       }
     }
+    */
   };
 
+  // Maneja la cancelación de la selección de imagen
   const handleCancel = () => {
     setImg(null);
   };

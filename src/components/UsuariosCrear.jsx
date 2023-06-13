@@ -189,7 +189,7 @@ const UsuariosCrear = () => {
               if(!fotoSeleccionada)
               {
                 await updateDoc(doc(baseDatos, "usuarios", datos.user.uid), {
-                  photoURL: "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
+                  photoURL: "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/usuario.jpg?alt=media&token=5905c705-9f69-4bb0-83d3-bce12c38fb37&_gl=1*1n7a7xe*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjU5NjY0NS45NS4xLjE2ODY1OTY3ODMuMC4wLjA.",
                 });
               }
 

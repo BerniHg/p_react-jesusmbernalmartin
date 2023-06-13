@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { baseDatos } from "../firebase";
 import { format, isToday, isYesterday } from 'date-fns';
+
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 
@@ -12,6 +13,7 @@ const Chats = () => {
   const { dispatch } = useContext(ChatContext);
 
   useEffect(() => {
+    // Función para obtener los chats del usuario actual desde Firebase
     const getChats = async () => {
       const docRef = doc(baseDatos, "chatsUsuarios", currentUser.uid);
       const unsubscribe = onSnapshot(docRef, (doc) => {
@@ -21,6 +23,7 @@ const Chats = () => {
       return unsubscribe;
     };
 
+    // Verificar si el usuario actual ha iniciado sesión y obtener los chats
     if (currentUser.uid) {
       getChats();
     }
@@ -30,6 +33,7 @@ const Chats = () => {
     dispatch({ type: "CHANGE_USER", payload: u });
   };
 
+  // Formatear la fecha y mostrar "Hoy", "Ayer" o la fecha completa
   function formatDateWithDay(date) {
     const formattedDate = new Date(date.seconds * 1000);
     const hours = formattedDate.getHours();
@@ -49,6 +53,7 @@ const Chats = () => {
 
   return (
     <div className="chats">
+      {/* Iterar sobre los chats y renderizar componentes ChatUsuario */}
       {Object.entries(chats)
         ?.sort((a, b) => b[1].date - a[1].date)
         .map((chat) => {
@@ -73,24 +78,43 @@ const ChatUsuario = ({ chat, currentUser, handleSelect, formatDateWithDay }) => 
   const [state, setState] = useState("");
 
   useEffect(() => {
+    // Obtener información del usuario asociado al chat
     const obtenerUsuario = async () => {
       try {
         const userDoc = await getDoc(
           doc(baseDatos, "usuarios", chat.infoUsuario.uid)
+        );
+
+        const userEliminatedDoc = await getDoc(
+          doc(baseDatos, "usuariosEliminados", chat.infoUsuario.uid)
         );
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setNUsuario(userData.displayName);
           setImgUsuario(userData.photoURL);
           setEmailUsuario(userData.email);
-          setState(userData.connected)
+          setState(userData.connected);
+        }
+        else if (userEliminatedDoc) {
+          const userData = userEliminatedDoc.data();
+          setNUsuario(userData.displayName);
+          setImgUsuario(userData.photoURL);
+          setEmailUsuario(userData.email);
+          setState(userData.connected);
         }
       } catch (error) {
         console.error("Error al obtener el documento del usuario:", error);
       }
     };
 
+    // Obtener el usuario y establecer un intervalo para actualizar la información
     obtenerUsuario();
+
+    const interval = setInterval(obtenerUsuario, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, [chat]);
 
   return (

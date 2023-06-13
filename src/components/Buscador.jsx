@@ -12,6 +12,7 @@ const Buscador = () => {
   const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
 
   useEffect(() => {
+    // Obtener todos los usuarios de la base de datos al cargar el componente
     const obtenerUsuarios = async () => {
       const usuariosSnapshot = await getDocs(collection(baseDatos, "usuarios"));
       const usuariosData = usuariosSnapshot.docs.map((doc) => doc.data());
@@ -22,34 +23,35 @@ const Buscador = () => {
   }, []);
 
   useEffect(() => {
+    // Filtrar los usuarios según el nombre de búsqueda y el usuario actual al cambiar alguno de ellos
     const filtrarUsuarios = () => {
       const usuariosFiltrados = usuarios.filter((usuario) => {
         const nombreUsuarioActual = usuario.displayName.toLowerCase();
         const nombreUsuarioFiltrar = nombreUsuario.toLowerCase();
         return (
           nombreUsuarioActual !== currentUser.displayName &&
-          nombreUsuarioActual !== "usuario no encontrado" &&
           nombreUsuarioActual.startsWith(nombreUsuarioFiltrar)
         );
       });
-    
+
       setUsuariosFiltrados(usuariosFiltrados);
       setMostrarUsuario(false);
       setError(false);
-    
+
       if (nombreUsuario.trim() !== "" && usuariosFiltrados.length === 0) {
         setError(true);
       }
-    };    
+    };
 
     filtrarUsuarios();
   }, [currentUser.displayName, nombreUsuario, usuarios]);
 
+  // Evitar seleccionar el usuario actual
   const handleSelect = async (usuarioSeleccionado) => {
-    if (usuarioSeleccionado.displayName === currentUser.displayName || usuarioSeleccionado.displayName === "Usuario No Encontrado") {
-      return;
+    if (usuarioSeleccionado.displayName === currentUser.displayName) {
+      return; 
     }
-    
+
     let idCombinado = "";
 
     if (currentUser.uid > usuarioSeleccionado.uid) {
@@ -62,8 +64,8 @@ const Buscador = () => {
       const datos = await getDoc(doc(baseDatos, "chats", idCombinado));
 
       if (!datos.exists()) {
+        // Si no existe un documento de chat con ese ID, crear uno nuevo y actualizar la colección "chatsUsuarios"
         await setDoc(doc(baseDatos, "chats", idCombinado), { mensajes: [] });
-        
 
         await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
           [idCombinado + ".infoUsuario"]: {
@@ -86,6 +88,8 @@ const Buscador = () => {
         });
       }
       else{
+
+        // Si ya existe un documento de chat con ese ID, solo actualizar la colección "chatsUsuarios"
         await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
           [idCombinado + ".infoUsuario"]: {
             uid: usuarioSeleccionado.uid,

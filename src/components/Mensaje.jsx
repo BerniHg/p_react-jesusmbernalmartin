@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 import { format, isToday, isYesterday } from "date-fns";
+import { baseDatos } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const Mensaje = ({ mensaje }) => {
   const { currentUser } = useContext(AuthContext);
@@ -9,8 +11,11 @@ const Mensaje = ({ mensaje }) => {
 
   const ref = useRef();
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [fotoCurrent, setFotoCurrent] = useState(null);
+  const [fotoUsuario, setFotoUsuario] = useState(null);
 
   useEffect(() => {
+    // Scroll hacia abajo
     if (ref.current) {
       ref.current.scrollIntoView({
         behavior: "smooth",
@@ -18,6 +23,29 @@ const Mensaje = ({ mensaje }) => {
     }
   }, [mensaje]);
 
+  useEffect(() => {
+    const obtenerFoto = async () => {
+      // Obtener la foto del usuario actual
+      const currentUsuarioDocRef = doc(baseDatos, "usuarios", currentUser.uid);
+      const currentUsuarioDocSnap = await getDoc(currentUsuarioDocRef);
+      if (currentUsuarioDocSnap.exists()) {
+        const usuarioData = currentUsuarioDocSnap.data();
+        setFotoCurrent(usuarioData.photoURL);
+      }
+
+      // Obtener la foto del usuario del chat
+      const usuarioDocRef = doc(baseDatos, "usuarios", data.usuario.uid);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        setFotoUsuario(usuarioData.photoURL)
+      }
+    };
+
+    obtenerFoto();
+  }, [currentUser.uid, data.usuario.uid]);
+
+  // Formato fechas
   function formatDateWithDay(date) {
     const formattedDate = new Date(date.seconds * 1000);
     const hours = formattedDate.getHours();
@@ -38,10 +66,12 @@ const Mensaje = ({ mensaje }) => {
     }
   }
 
+  // Click en imagen
   const handleImagenClick = (imagen) => {
     setImagenAmpliada(imagen);
   };
 
+  // Descarga de archivo
   const handleFileDownload = (fileURL, fileName) => {
     const link = document.createElement("a");
     link.href = fileURL;
@@ -62,8 +92,7 @@ const Mensaje = ({ mensaje }) => {
         <img
           src={
             mensaje.senderId === currentUser.uid
-              ? currentUser.photoURL
-              : data.usuario.photoURL
+              ? fotoCurrent : fotoUsuario
           }
           alt=""
         />

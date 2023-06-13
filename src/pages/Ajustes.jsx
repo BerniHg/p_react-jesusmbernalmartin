@@ -7,8 +7,9 @@ import {
   EmailAuthProvider,
   deleteUser,
 } from "firebase/auth";
+import PaginaCarga from "../components/PaginaCarga";
 import { Link } from "react-router-dom";
-import { updateDoc, doc, getDoc } from "firebase/firestore";
+import { updateDoc, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { baseDatos, storage, auth } from "../firebase";
 import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import md5 from "md5";
@@ -43,6 +44,7 @@ const Ajustes = () => {
   const [mostrarContrasenna1, setMostrarContrasenna1] = useState(false);
   const [mostrarContrasenna2, setMostrarContrasenna2] = useState(false);
   const [contrExito, setContrExito] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   const reauthenticate = async (password) => {
     try {
@@ -57,6 +59,7 @@ const Ajustes = () => {
   };
 
   useEffect(() => {
+    setCargando(true);
     const obtenerDatos = async (uid) => {
       const usuarioDocRef = doc(baseDatos, "usuarios", uid);
       const usuarioDocSnap = await getDoc(usuarioDocRef);
@@ -73,6 +76,7 @@ const Ajustes = () => {
     };
 
     obtenerDatos(currentUser.uid);
+    setCargando(false);
   }, [currentUser.uid]);
 
   useEffect(() => {
@@ -86,7 +90,6 @@ const Ajustes = () => {
       file: selectedFile,
       localURL: URL.createObjectURL(selectedFile),
     });
-    //setNuevaFoto(URL.createObjectURL(selectedFile));
   };
 
   const handleChangeNombreCompleto = (event) => {
@@ -131,7 +134,7 @@ const Ajustes = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+    setCargando(true);
     let isValid = true;
 
     if (!regexNombreCompleto.test(nombreCompleto)) {
@@ -156,9 +159,7 @@ const Ajustes = () => {
 
           uploadTask.on(
             "state_changed",
-            (snapshot) => {
-              // Manejar el progreso de carga si es necesario
-            },
+            (snapshot) => {},
             (error) => {
               console.error(error);
             },
@@ -192,9 +193,59 @@ const Ajustes = () => {
         console.error("Error al guardar los cambios", error);
       } finally {
         setEditar(false);
+        setCargando(false);
       }
     }
   };
+  /*
+  const eliminarUsuario = async (uidUser, emailUser, passwordUser) => {
+    try {
+      console.log("Paso 1");
+
+      await signInWithEmailAndPassword(auth, emailUser, passwordUser);
+
+      console.log("Paso 2");
+
+      await deleteUser(auth.currentUser, emailUser);
+
+      await signInWithEmailAndPassword(auth, email, password);
+
+      console.log("Paso 3");
+
+      const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
+      const usuarioDoc = await getDoc(usuarioDocRef);
+      const usuarioData = usuarioDoc.data();
+
+      if (usuarioData) {
+        const usuarioDocRef_eliminados = doc(baseDatos, "usuariosEliminados", uidUser);
+
+        await setDoc(usuarioDocRef_eliminados, {
+          uid: usuarioData.uid,
+          fullName: "Usuario No Encontrado",
+          displayName: "Usuario No Encontrado",
+          photoURL:
+            "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/usuario.jpg?alt=media&token=5905c705-9f69-4bb0-83d3-bce12c38fb37&_gl=1*1n7a7xe*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjU5NjY0NS45NS4xLjE2ODY1OTY3ODMuMC4wLjA."
+        })
+        
+        await deleteDoc(usuarioDocRef);
+      }
+
+      console.log("Paso 4");
+
+      await deleteDoc(doc(baseDatos, "chatsUsuarios", uidUser));
+
+      console.log(
+        "Correo electrónico de autenticación eliminado correctamente."
+      );
+
+      console.log("Usuario eliminado correctamente.");
+
+      navigate("/admin");
+    } catch (error) {
+      console.error("Error al eliminar el usuario:", error);
+    }
+  };
+  */
 
   const handleDeleteAccount = async () => {
     try {
@@ -209,19 +260,24 @@ const Ajustes = () => {
         const usuarioData = usuarioDoc.data();
 
         if (usuarioData) {
-          await updateDoc(usuarioDocRef, {
-            email: "",
+          const usuarioDocRef_eliminados = doc(
+            baseDatos,
+            "usuariosEliminados",
+            currentUser.uid
+          );
+
+          await setDoc(usuarioDocRef_eliminados, {
+            uid: currentUser.uid,
             fullName: "Usuario No Encontrado",
             displayName: "Usuario No Encontrado",
             photoURL:
-              "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/fotosPerfil%2Fusuario.jpg?alt=media&token=b3fc218f-dfa4-415f-85f5-29caa9fa2ee8&_gl=1*4f1z6x*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjQ5NTI0Mi44OC4xLjE2ODY0OTUyNTUuMC4wLjA.",
-            connected: null,
+              "https://firebasestorage.googleapis.com/v0/b/orange-chat-14be2.appspot.com/o/usuario.jpg?alt=media&token=5905c705-9f69-4bb0-83d3-bce12c38fb37&_gl=1*1n7a7xe*_ga*NDU0NTQ2MjMyLjE2NzgxOTgxNjY.*_ga_CW55HF8NVT*MTY4NjU5NjY0NS45NS4xLjE2ODY1OTY3ODMuMC4wLjA.",
           });
+
+          await deleteDoc(usuarioDocRef);
 
           await signOut(auth);
         }
-
-        
       }
     } catch (error) {
       console.error("Error al eliminar la cuenta", error);
@@ -259,6 +315,21 @@ const Ajustes = () => {
   }, [darkMode]);
 
   useEffect(() => {
+    const habilitado = async () => {
+      const usuarioDocRef = doc(baseDatos, "usuarios", currentUser.uid);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        const usuarioData = usuarioDocSnap.data();
+        console.log(usuarioData.enable);
+        if (!usuarioData.enable) {
+          await updateDoc(doc(baseDatos, "usuarios", currentUser.uid), {
+            connected: false,
+          });
+          signOut(auth);
+        }
+      }
+    };
+
     const connectUser = async () => {
       try {
         currentUser &&
@@ -282,13 +353,17 @@ const Ajustes = () => {
     };
 
     connectUser();
+    habilitado();
+
+    const interval = setInterval(habilitado, 5000);
 
     window.addEventListener("beforeunload", disconnectUser);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener("beforeunload", disconnectUser);
     };
-  }, [currentUser]);
+  });
 
   const handleChangePassword = async () => {
     let isValid = true;
@@ -308,8 +383,8 @@ const Ajustes = () => {
     }
 
     if (isValid) {
+      setCargando(true);
       await reauthenticate(md5(contr));
-      // Actualizar la contraseña
       try {
         const hashedContrasenna = md5(contrasenna);
         await updatePassword(auth.currentUser, hashedContrasenna);
@@ -329,6 +404,8 @@ const Ajustes = () => {
       } catch (error) {
         console.error("Error al actualizar la contraseña", error);
         setContrExito(false);
+      } finally {
+        setCargando(false);
       }
     }
   };
@@ -347,6 +424,7 @@ const Ajustes = () => {
 
   return (
     <div className="ajustes">
+      {cargando && <PaginaCarga />}
       <div className="ajustes-header">
         <Link to="/">Regresar</Link>
       </div>

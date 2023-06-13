@@ -75,6 +75,11 @@ button {
   background-color: #d68e5a;
 }
 
+.formWrapper button:disabled {
+  color: gray;
+}
+
+
 
 .input-password-container {
   display: flex;
@@ -439,8 +444,8 @@ button {
 }
 
 .mensaje .infomensaje img {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -876,6 +881,11 @@ button.boton-mostrar-barra img {
   background-color: #d68e5a;
 }
 
+.config table button:disabled {
+  background-color: #ed995d;
+  cursor:not-allowed;
+}
+
 .config table td.botones {
   text-align: center;
 }
@@ -1026,4 +1036,34 @@ button.boton-mostrar-barra img {
 
 .admin-container .admin-content {
   margin-bottom: 20px;
+}
+
+#loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #d68e5a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

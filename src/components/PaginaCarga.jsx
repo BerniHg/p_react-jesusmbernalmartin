@@ -2,8 +2,8 @@ import React from "react";
 
 const PaginaCarga = () => {
   return (
-    <div className="pagina-carga">
-      <span>Cargando...</span>
+    <div id="loader">
+      <div class="loader-icon"></div>
     </div>
   );
 };

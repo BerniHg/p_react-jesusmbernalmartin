@@ -10,7 +10,6 @@ import Puntos from "../img/puntos.png";
 const Chat = () => {
   const { data } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
-  console.log(data);
 
   const [isOpen, setIsOpen] = useState(false);
   const [nameClicked, setNameClicked] = useState(false);
@@ -20,17 +19,20 @@ const Chat = () => {
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [estructuraNombre, setEstructuraNombre] = useState("");
   const [connected, setConnected] = useState(false);
-  const opcionesRef = useRef(null); // Referencia al elemento de las opciones
+  const opcionesRef = useRef(null);
 
+  // Función para manejar el clic del botón
   const handleButtonClick = () => {
     setIsOpen(!isOpen);
   };
 
+  // Función para manejar el clic del nombre
   const handleNameClicked = () => {
     setIsOpen(!isOpen);
     setNameClicked(!nameClicked);
   };
 
+  // Función para eliminar un usuario
   const eliminarUsuario = async () => {
     const usuariosSnapshot = await getDocs(
       query(collection(baseDatos, "chatsUsuarios"), where(data.chatId + ".infoUsuario.uid", "==", data.usuario.uid))
@@ -56,6 +58,7 @@ const Chat = () => {
     window.location.reload();
   };
 
+  // Función para cambiar el nombre
   const cambiarNombre = async () => {
     if (nameClicked) {
       await updateDoc(doc(baseDatos, "chatsUsuarios", currentUser.uid), {
@@ -72,8 +75,8 @@ const Chat = () => {
     }
   };
 
+  // Efecto que se ejecuta al cargar el componente o cuando cambian ciertas dependencias
   useEffect(() => {
-    console.log(data.usuario.nickName);
     if (!data.usuario.nickName) {
       setNuevoNombre(nombreUsuario);
       setEstructuraNombre(nombreUsuario);
@@ -82,10 +85,15 @@ const Chat = () => {
       setEstructuraNombre(`${data.usuario.nickName} / ${nombreUsuario}`);
     }
 
+    // Función para obtener el nombre del usuario
     const nombreUser = async () => {
       try {
         const userDoc = await getDoc(
           doc(baseDatos, "usuarios", data.usuario.uid)
+        );
+
+        const userEliminatedDoc = await getDoc(
+          doc(baseDatos, "usuariosEliminados", data.usuario.uid)
         );
         if (userDoc.exists()) {
           const userData = userDoc.data();
@@ -96,29 +104,42 @@ const Chat = () => {
           setFoto(foto_user);
           setEmail(email_user);
         }
+        else if (userEliminatedDoc) {
+          const userData = userEliminatedDoc.data();
+          const nombre = userData.displayName;
+          const foto_user = userData.photoURL;
+          const email_user = userData.email;
+          setNombreUsuario(nombre);
+          setFoto(foto_user);
+          setEmail(email_user);
+        }
       } catch (error) {
-        console.log("Error al obtener el valor del nombre:", error);
+        console.error("Error al obtener el valor del nombre:", error);
       }
     };
   
+    // Función para obtener el estado de conexión del usuario
     const fetchConnected = async () => {
       try {
-        const userDoc = await getDoc(
-          doc(baseDatos, "usuarios", data.usuario.uid)
-        );
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const connectedValue = userData.connected || false;
-          setConnected(connectedValue);
+        if(data.usuario.uid){
+          const userDoc = await getDoc(
+            doc(baseDatos, "usuarios", data.usuario.uid)
+          );
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const connectedValue = userData.connected || false;
+            setConnected(connectedValue);
+          }
         }
       } catch (error) {
-        console.log("Error al obtener el valor de connected:", error);
+        console.error("Error al obtener el valor de connected:", error);
       }
     };
   
     nombreUser();
     fetchConnected();
   
+    // Función para manejar el clic fuera del componente
     const handleClickOutside = (event) => {
       if (opcionesRef.current && !opcionesRef.current.contains(event.target)) {
         setIsOpen(false);
@@ -127,7 +148,8 @@ const Chat = () => {
   
     document.addEventListener("click", handleClickOutside);
   
-    const interval = setInterval(fetchConnected, 5000);
+    // Intervalo para actualizar el estado de conexión
+    const interval = setInterval(fetchConnected, 1000);
   
     return () => {
       clearInterval(interval);
