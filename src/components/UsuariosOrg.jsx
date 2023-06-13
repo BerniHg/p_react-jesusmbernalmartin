@@ -15,6 +15,7 @@ import {
   deleteUser,
   updatePassword,
   signInWithEmailAndPassword,
+  signOut
 } from "firebase/auth";
 import { ref } from "firebase/storage";
 import { uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -178,6 +179,12 @@ const UsuariosOrg = () => {
 
       await signInWithEmailAndPassword(auth, emailUser, passwordUser);
 
+      const currenUserAuth = auth.currentUser;
+
+      await signOut(auth);
+
+      await signInWithEmailAndPassword(auth, email, password);
+
       const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
       const usuarioDoc = await getDoc(usuarioDocRef);
       const usuarioData = usuarioDoc.data();
@@ -198,9 +205,7 @@ const UsuariosOrg = () => {
 
       await deleteDoc(doc(baseDatos, "chatsUsuarios", uidUser));
 
-      await deleteUser(auth.currentUser, emailUser);
-
-      await signInWithEmailAndPassword(auth, email, password);
+      await deleteUser(currenUserAuth, emailUser);
 
       console.log(
         "Correo electrónico de autenticación eliminado correctamente."
