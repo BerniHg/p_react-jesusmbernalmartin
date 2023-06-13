@@ -201,17 +201,12 @@ const UsuariosOrg = () => {
 
       await deleteUser(auth.currentUser, emailUser);
 
+      window.location.reload();
+
       await signInWithEmailAndPassword(auth, email, password);
 
-      console.log(
-        "Correo electrónico de autenticación eliminado correctamente."
-      );
-
-      console.log("Usuario eliminado correctamente.");
-
       navigate("/admin");
-      
-      window.location.reload();
+
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
     }

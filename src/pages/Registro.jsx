@@ -209,7 +209,7 @@ const Registro = () => {
             <input
               type="text"
               id="nombre_usuario"
-              placeholder="Nombre de usuario"
+              placeholder="Nombre de usuario (mínimo 4 y máximo 16 caracteres con mayúsculas, minúsculas, números, y guiones)"
             />
             {errors.nombre_usuario && (
               <span className="error">{errors.nombre_usuario}</span>
@@ -217,7 +217,7 @@ const Registro = () => {
             <input type="email" id="email" placeholder="Correo electrónico" />
             {errors.correo && <span className="error">{errors.correo}</span>}
             <div className="input-password-container">
-              <input type="password" placeholder="Contraseña" id="password" />
+              <input type="password" placeholder="Contraseña (mínimo 8 caracteres con mayúsculas, minúsculas, números, y guiones)" id="password" />
               <button type="button" id="togglePassword">
                 Mostrar
               </button>
