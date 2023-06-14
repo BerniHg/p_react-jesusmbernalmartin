@@ -178,6 +178,8 @@ const UsuariosOrg = () => {
 
       await signInWithEmailAndPassword(auth, emailUser, passwordUser);
 
+      const currentUserAuth = auth.currentUser;
+
       const usuarioDocRef = doc(baseDatos, "usuarios", uidUser);
       const usuarioDoc = await getDoc(usuarioDocRef);
       const usuarioData = usuarioDoc.data();
@@ -199,13 +201,13 @@ const UsuariosOrg = () => {
 
       await deleteDoc(doc(baseDatos, "chatsUsuarios", uidUser));
 
-      await deleteUser(auth.currentUser, emailUser);
-
-      window.location.reload();
-
       await signInWithEmailAndPassword(auth, email, password);
 
       navigate("/admin");
+
+      await deleteUser(currentUserAuth, emailUser);
+
+      window.location.reload();
 
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
