@@ -205,6 +205,7 @@ const UsuariosOrg = () => {
 
       navigate("/admin");
 
+      window.location.reload()
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
     }
